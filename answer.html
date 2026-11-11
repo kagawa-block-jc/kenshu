@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会員研修委員会 出欠回答</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#0a5aa8; --blue-deep:#063b73; --blue-soft:#e8f0fa; --ink:#111318; --muted:#6b7280; --line:#e6e8ec;
+    --ok:#0f7b52; --ok-bg:#e4f3ea; --absent:#d92d20; --absent-bg:#fde8e6; --pending:#1a66c8; --pending-bg:#e4eefb;
+    --display:"Anton","Impact","Arial Narrow",sans-serif; --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f4f6f9;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  #app{max-width:640px;margin:0 auto;background:#fff;min-height:100vh}
+  @media(min-width:900px){#app{max-width:760px;margin:24px auto;border-radius:14px;box-shadow:0 0 40px rgba(0,0,0,.06);min-height:0}}
+
+  .hero{padding:24px 20px 16px;border-bottom:3px solid var(--blue-deep)}
+  html.embed .hero{display:none}
+  .minfo{display:none;margin:0;padding:12px 20px;background:#f3f6fb;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.6}
+  html.embed .minfo{display:block}
+  .minfo b{font-size:15px}
+  .minfo .gt{color:#b45309;font-weight:700}
+  .minfo .dl{display:inline-block;margin-top:6px;background:#fff;border:1.5px solid var(--blue);color:var(--blue);border-radius:8px;padding:6px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  html.embed body{background:#fff;padding-bottom:0}
+  html.embed #app{min-height:0;margin:0 auto;box-shadow:none;border-radius:0}
+  .hero .en{font-family:var(--display);font-size:44px;line-height:.95;text-transform:uppercase}
+  .hero .en b{color:var(--blue);font-weight:400}
+  .hero .org{font-size:11px;font-weight:700;margin-top:10px;color:#333}
+  .hero .ttl{font-size:20px;font-weight:900;margin-top:2px}
+  .hero .meta{font-size:13px;color:#333;margin-top:4px}
+  .hero .lead{margin-top:14px;font-size:14px;font-weight:700;color:#1b2430;line-height:1.6}
+  .hero .lead small{display:block;margin-top:4px;font-size:12px;font-weight:400;color:#5b6675}
+  .hero .note{margin-top:10px;padding:10px 14px;background:#fff8e1;border-left:4px solid #f9ab00;font-size:13px;line-height:1.6;color:#333}
+
+  .step{padding:18px 20px;border-bottom:1px solid var(--line)}
+  .step .h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .step .h .n{font-family:var(--display);font-size:22px;color:var(--blue)}
+  .step .h .t{font-size:15px;font-weight:900}
+  .step .h .req{font-size:10px;font-weight:700;color:#fff;background:var(--absent);padding:1px 6px;border-radius:3px;margin-left:auto}
+  .step .h .opt{font-size:10px;font-weight:700;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:auto}
+  .mlist{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .mlist .mrow{display:flex;width:100%;gap:12px;align-items:center;padding:11px 14px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;cursor:pointer}
+  .mlist .mrow:last-child{border-bottom:0}
+  .mlist .mrow.on{background:#eef3fc;box-shadow:inset 4px 0 0 var(--blue)}
+  .mlist .d{flex:0 0 52px;text-align:center;line-height:1.1}
+  .mlist .d b{display:block;font-family:var(--display);font-size:20px;color:var(--ink)}
+  .mlist .d small{font-size:11px;color:var(--muted)}
+  .mlist .t{flex:1;min-width:0}
+  .mlist .t b{display:block;font-size:14.5px}
+  .mlist .t small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .mlist .t em{font-style:normal;color:#b8860b;font-weight:700}
+  .mlist .st{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .mlist .st.ok{background:#e3f3e8;color:#1b7f3b}
+  .mlist .st.ng{background:#fff3dc;color:#b8860b}
+  .whonote{font-size:12px;color:var(--muted);margin-top:8px}
+  select,input[type=text],textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:15px;color:var(--ink);background:#fff}
+  textarea{min-height:76px;resize:vertical}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .opt-btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:14px 6px;font:inherit;font-size:15px;font-weight:900;color:var(--ink);cursor:pointer;text-align:center;line-height:1.2}
+  .opt-btn small{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-top:2px}
+  .opt-btn.on{border-color:var(--blue);background:var(--blue);color:#fff}
+  .opt-btn.on small{color:rgba(255,255,255,.8)}
+  .opt-btn.absent.on{border-color:var(--absent);background:var(--absent)}
+  .opt-btn.pending.on{border-color:var(--pending);background:var(--pending)}
+  .opt-btn.zoom.on{border-color:var(--ok);background:var(--ok)}
+  .sub{margin-top:12px;padding:12px;background:var(--blue-soft);border-radius:10px;display:none}
+  .sub.on{display:block}
+  .sub label{display:block;font-size:12px;font-weight:700;color:var(--blue);margin:8px 0 4px}
+  .sub label:first-child{margin-top:0}
+
+  /* 名前の一覧 */
+  .names{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+  @media(min-width:600px){.names{grid-template-columns:repeat(3,1fr)}}
+  .names .g{grid-column:1/-1;font-size:11px;font-weight:900;color:var(--blue);letter-spacing:.1em;margin-top:6px}
+  .nm{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:9px 8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left;line-height:1.25}
+  .nm small{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+  .nm.on{border-color:var(--blue);background:var(--blue-soft)}
+  .nm.done{border-left:4px solid var(--ok)}
+  .current{margin-top:10px;font-size:12px;color:var(--muted)}
+  .current b{color:var(--ok)}
+
+  .foot{padding:18px 20px 28px}
+  .send{width:100%;border:0;background:var(--blue);color:#fff;font:inherit;font-size:17px;font-weight:900;padding:16px;border-radius:10px;cursor:pointer;letter-spacing:.06em}
+  .send:disabled{background:#b9c3d0;cursor:default}
+  .err{color:var(--absent);font-size:13px;font-weight:700;margin-bottom:8px;display:none}
+  .done-box{padding:40px 20px;text-align:center}
+  .done-box .en{font-family:var(--display);font-size:40px;color:var(--ok);line-height:1}
+  .done-box p{margin:10px 0 0;font-size:15px}
+  .done-box .sum{margin:18px auto 0;max-width:340px;text-align:left;background:#f4f6f9;border-radius:10px;padding:14px 16px;font-size:14px}
+  .done-box .sum div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line)}
+  .done-box .sum div:last-child{border:0}
+  .again{margin-top:16px;background:#fff;border:1.5px solid var(--line);color:var(--ink);font:inherit;font-weight:700;padding:10px 18px;border-radius:8px;cursor:pointer}
+  .msg{padding:80px 16px;text-align:center;color:var(--muted);font-size:17px;font-weight:700}
+  .msg.load::before{content:"";display:block;width:36px;height:36px;margin:0 auto 14px;border:4px solid #dfe5ee;border-top-color:var(--blue);border-radius:50%;animation:spin .9s linear infinite}
+  .msg.load small{display:block;font-weight:400;font-size:13px;margin-top:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"><div class="msg load">回答フォームを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div></div>
+
+<script>
+// ===== GitHub Pages 版：Apps Script との通信（ここだけ環境ごとに違う） =====
+// 会員研修委員会の Apps Script WebアプリURL（index.html と同じものを入れる）
+var API_URL = 'https://script.google.com/macros/s/AKfycbzZRNOL2MYCy9CneqGn47x0MWEoWecj1_Kd4HmIOJKcmVTdMIppWtl2YxOBruZRoMdI/exec';
+function qp(k){ try { return new URLSearchParams(location.search).get(k) || ''; } catch(e){ return ''; } }
+// Apps Script の google.script.run と同じ形で使える小さな代わり（fetch で ?api= と POST を叩く）
+window.google = { script: { run: (function(){
+  function mk(){
+    var ok = null, ng = null;
+    var o = {
+      withSuccessHandler: function(f){ ok = f; return o; },
+      withFailureHandler: function(f){ ng = f; return o; },
+      answerData: function(){
+        fetch(API_URL + '?api=answerData&t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(j){
+          if(!j || !j.ok) throw new Error((j && j.error) || '読み込めません');
+          ORG = j.org || {}; if(ok) ok(j.data);
+        }).catch(function(e){ if(ng) ng(e); });
+      },
+      submitAnswer: function(a){
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: 'submitAnswer', a: a }) }).then(function(r){ return r.json(); }).then(function(j){
+          if(!j || !j.ok) throw new Error((j && j.error) || '送信できませんでした');
+          if(ok) ok(j.r);
+        }).catch(function(e){ if(ng) ng(e); });
+      }
+    };
+    return o;
+  }
+  return { withSuccessHandler: function(f){ return mk().withSuccessHandler(f); }, withFailureHandler: function(f){ return mk().withFailureHandler(f); } };
+})() } };
+var ORG = {};
+var INIT = null;
+function groupOf(p){ if(ORG.kind === 'ブロック') return p.kubun === 'ブロック役員' ? 'ブロック役員' : '各LOM 理事長・専務'; return String(p.kubun || '').trim() || '委員'; }
+var D = null, S = { meetingId:'', name:'', attend:'', party:'', proxyName:'', proxyYaku:'', mandate:'', note:'', obs:'なし', obsNames:'', obsParty:'' };
+var INITIAL = qp('id');
+var EMBED = qp('embed') === '1';
+var ME = qp('me');   // 閲覧ページの「回答」タブに埋め込まれているとき
+var PROJECT = qp('project').trim();   // プロジェクトの入口から開いたとき：その会議だけ出す（なければ全部）
+if(EMBED){ document.documentElement.classList.add('embed'); }
+// 閲覧ページへ連絡する。Googleのページは枠が二重になっているので、親をたどって全部に送る
+function postUp(msg){ try { var w = window; var n = 0; while(w !== w.top && n < 6){ w = w.parent; n++; try { w.postMessage(msg, '*'); } catch(e){} } } catch(e){} }
+function postH(){ if(!EMBED) return; try { var a = document.getElementById('app'); var h = a ? (a.offsetTop + a.offsetHeight) : document.body.scrollHeight; postUp({ type: 'answerHeight', h: h }); } catch(e){} }   // 枠の高さに引きずられない中身の高さを送る
+window.addEventListener('load', postH); window.addEventListener('resize', postH);
+setInterval(postH, 800);
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function bootAnswer(d){
+  D = d;
+  if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
+  if(!d.meetings.length){ document.getElementById('app').innerHTML = '<div class="msg">現在、回答を受け付けている会議はありません。</div>'; return; }
+  S.meetingId = d.meetings.some(function(m){ return m.id === INITIAL; }) ? INITIAL : d.meetings[0].id;
+  // 前回の名前を覚えておく（同じ端末なら選び直し不要）。埋め込み時は閲覧ページから渡された名前を優先
+  var me = ME; try { if(!me) me = localStorage.getItem('ans_me') || ''; } catch(e){}
+  if(me && d.people.some(function(p){ return p.name === me; })) S.name = me;
+  render();
+}
+if(INIT && INIT.meetings) bootAnswer(INIT);
+else google.script.run.withSuccessHandler(bootAnswer).withFailureHandler(function(e){
+  document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>';
+}).answerData();
+
+function meeting(){ return D.meetings.filter(function(m){ return m.id === S.meetingId; })[0]; }
+function targets(){ var m = meeting(); return D.people.filter(function(p){ return m.targets.indexOf(p.name) >= 0; }); }
+function existing(){ return (D.answers[S.meetingId] || {})[S.name]; }
+
+function render(){
+  var m = meeting(), hasParty = m.party === '有';
+  var h = '';
+  h += '<div class="hero"><div class="en">' + esc(ORG.en || '') + '<br><b>RSVP</b></div>' +
+       '<div class="org">' + esc(ORG.name || '') + '</div>' +
+       '<div class="ttl">' + esc(m.label) + '</div>' +
+       '<div class="meta">' + esc(m.date) + '　' + esc(m.time) + '～' + (m.gather ? '<b style="color:#b45309">（' + esc(m.gather.time) + ' 集合' + (m.gather.why ? '：' + esc(m.gather.why) : '') + '）</b>' : '') + '　' + esc(m.place) + (m.deadline ? '　／　回答締切 ' + esc(m.deadline) : '') + (m.dress ? '<br>服装：<b>' + esc(m.dress) + '</b>' : '') + '</div>' +
+       (m.note ? '<div class="note">' + esc(m.note).replace(/\n/g, '<br>') + '</div>' : '') +
+       '<div class="lead">上記会議の出欠確認です。下記より出欠のご回答をお願いいたします。<br><small>お名前を選び、出欠・懇親会を選んで「送信」を押してください。回答後の変更も同じ手順で上書きできます。</small></div>' +
+       '</div>';
+
+  // 1 会議
+  if(D.meetings.length > 1 && !EMBED){   // 埋め込み時は閲覧ページ側で会議が決まっているので出さない
+    // 受付中の会議が複数ある → 一覧で見せる（押して切り替え。名前が分かっていれば 回答済／未回答 も）
+    var acc = D.meetings.filter(function(x){ return x.accepting; });
+    var cur0 = meeting();
+    var rows = acc.slice(); if(cur0 && !cur0.accepting) rows.unshift(cur0);
+    if(rows.length > 1){
+      h += '<div class="step"><div class="h"><span class="n">01</span><span class="t">対象の会議</span><span class="opt">受付中 ' + acc.length + ' 件</span></div>' +
+           '<div class="mlist">' + rows.map(function(x){
+             var dm = String(x.date).match(/(\d+)月(\d+)日/);
+             var st = !S.name ? '' : ((D.answers[x.id] || {})[S.name] ? '<span class="st ok">回答済</span>' : '<span class="st ng">未回答</span>');
+             return '<button type="button" class="mrow' + (x.id === S.meetingId ? ' on' : '') + '" data-m="' + esc(x.id) + '"><span class="d"><b>' + (dm ? (+dm[1]) + '/' + (+dm[2]) : esc(x.short)) + '</b><small>' + esc(x.dow || '') + '</small></span><span class="t"><b>' + esc(x.label) + '</b><small>' + esc(x.type) + (x.deadline ? '　締切 ' + esc(String(x.deadline).replace(/^\d{4}年(\d+)月(\d+)日/, '$1/$2')) : '') + (x.accepting ? '' : '　<em>締切後・変更可</em>') + '</small></span>' + st + '</button>';
+           }).join('') + '</div>' +
+           (S.name ? '' : '<div class="whonote">お名前を選ぶと、会議ごとの回答済／未回答が出ます</div>') + '</div>';
+    } else {
+      h += '<div class="step"><div class="h"><span class="n">01</span><span class="t">対象の会議</span></div>' +
+           '<select id="mt">' + D.meetings.map(function(x){ return '<option value="' + esc(x.id) + '"' + (x.id === S.meetingId ? ' selected' : '') + '>' + esc(x.label) + '　' + esc(x.short) + '</option>'; }).join('') + '</select></div>';
+    }
+  }
+
+  // 埋め込み時：日時・場所をひと目で分かるように名前の上に出す（詳細は閲覧ページの会場へ）
+  h += '<div class="minfo"><b>' + esc(m.label) + '</b><br>📅 ' + esc(m.date) + '　<b>' + esc(m.time) + '</b>～' + (m.gather ? '　<span class="gt">🕒 ' + esc(m.gather.time) + ' 集合' + (m.gather.why ? '（' + esc(m.gather.why) + '）' : '') + '</span>' : '') +
+       '<br>📍 ' + (m.place ? esc(m.place) : '<span style="color:#6b7280">会場は追ってご案内</span>') + (hasParty ? '　🍺 懇親会あり' : '') +
+       '<br><button type="button" class="dl" id="goDetail">会議の詳細（会場・懇親会・服装など）を見る ↓</button></div>';
+  // 2 氏名
+  h += '<div class="step"><div class="h"><span class="n">' + (D.meetings.length > 1 ? '02' : '01') + '</span><span class="t">お名前</span><span class="req">必須</span></div><div class="names">';
+  var tg = targets(), last = '';
+  tg.forEach(function(p){
+    var g = groupOf(p);
+    if(g !== last){ last = g; h += '<div class="g">' + g + '</div>'; }
+    var ans = (D.answers[S.meetingId] || {})[p.name];
+    h += '<button type="button" class="nm' + (S.name === p.name ? ' on' : '') + (ans ? ' done' : '') + '" data-n="' + esc(p.name) + '">' + esc(p.name) +
+         '<small>' + esc([ORG.kind === 'ブロック' && p.kubun !== 'ブロック役員' ? p.lom : '', p.yaku].filter(Boolean).join('　')) + '</small></button>';
+  });
+  h += '</div>';
+  var ex = existing();
+  if(S.name) h += '<div class="current">' + (ex ? '現在の回答：<b>' + esc(ex.attend) + '</b>' + (hasParty && ex.party ? '　懇親会：<b>' + esc(ex.party) + '</b>' : '') + '（' + esc(ex.when) + '）　※送信すると上書きされます' : 'まだ回答がありません') + '</div>';
+  h += '</div>';
+
+  // 3 会議の出欠
+  var n3 = D.meetings.length > 1 ? '03' : '02';
+  h += '<div class="step"><div class="h"><span class="n">' + n3 + '</span><span class="t">会議の出欠</span><span class="req">必須</span></div><div class="grid">' +
+       btn('attend','出席','') + btn('attend','遅参','') + btn('attend','出席（ZOOM）','zoom','ZOOM') +
+       btn('attend','欠席','absent') + btn('attend','未定','pending') + btn('attend','代理出席','', '代理') +
+       '</div>' +
+       '<div class="sub' + (S.attend === '代理出席' ? ' on' : '') + '" id="proxy">' +
+         '<label>代理者の氏名</label><input type="text" id="proxyName" value="' + esc(S.proxyName) + '" placeholder="例：前田 恭兵">' +
+         '<label>代理者の役職</label><input type="text" id="proxyYaku" value="' + esc(S.proxyYaku) + '" placeholder="例：専務理事">' +
+         '<label>委任状の提出方法</label><div class="grid">' + btn('mandate','当日持参','') + btn('mandate','事前にメールで送付','', 'メール送付') + btn('mandate','委任状は不要（役員会）','', '不要（役員会）') + '</div>' +
+       '</div></div>';
+
+  // 4 懇親会
+  var n4 = D.meetings.length > 1 ? '04' : '03';
+  if(hasParty){
+    h += '<div class="step"><div class="h"><span class="n">' + n4 + '</span><span class="t">懇親会の出欠</span><span class="req">必須</span></div><div class="grid">' +
+         btn('party','出席','') + btn('party','遅参','') + btn('party','欠席','absent') + btn('party','未定','pending') + btn('party','代理出席','', '代理') +
+         '</div>' + (m.partyFee > 0 ? '<div class="current">懇親会費 ¥' + Number(m.partyFee).toLocaleString('ja-JP') + '（当日集金）</div>' : '') + '</div>';
+  }
+
+  // 5 備考・オブザーバー
+  var n5 = D.meetings.length > 1 ? '05' : '04';
+  h += '<div class="step"><div class="h"><span class="n">' + n5 + '</span><span class="t">備考・オブザーバー</span><span class="opt">任意</span></div>' +
+       '<textarea id="note" placeholder="例：懇親会は20時までで退席します／19:45頃に遅参します">' + esc(S.note) + '</textarea>' +
+       '<div style="font-size:11.5px;color:#6b7280;margin-top:4px">備考は出欠状況ページで対象者に見えます。欠席の理由（体調など）は書かなくて大丈夫です</div>' +
+       '<div class="grid two" style="margin-top:10px">' + btn('obs','なし','', 'オブザーバー なし') + btn('obs','あり','', 'オブザーバー あり') + '</div>' +
+       '<div class="sub' + (S.obs === 'あり' ? ' on' : '') + '" id="obsbox">' +
+         '<label>オブザーバーの役職・氏名（複数は「、」区切り）</label><input type="text" id="obsNames" value="' + esc(S.obsNames) + '" placeholder="例：四国地区協議会会長 山本 祐樹（役職と姓名の間は空白）">' +
+         (hasParty ? '<label>オブザーバーの懇親会出席</label><div class="grid two">' + btn('obsParty','出席する','') + btn('obsParty','出席しない','') + '</div>' : '') +
+       '</div></div>';
+
+  h += '<div class="foot"><div class="err" id="err"></div><button class="send" id="send">回答を送信する</button></div>';
+
+  var el = document.getElementById('app'); el.innerHTML = h;
+  var mt = document.getElementById('mt'); if(mt) mt.onchange = function(){ S.meetingId = this.value; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll('.mlist .mrow'), function(b){ b.onclick = function(){ if(b.dataset.m !== S.meetingId){ S.meetingId = b.dataset.m; S.attend = ''; S.party = ''; render(); window.scrollTo(0, 0); } }; });
+  Array.prototype.forEach.call(el.querySelectorAll('.nm'), function(b){ b.onclick = function(){ S.name = b.dataset.n; render(); }; });
+  Array.prototype.forEach.call(el.querySelectorAll('.opt-btn'), function(b){
+    b.onclick = function(){
+      S[b.dataset.k] = b.dataset.v;
+      Array.prototype.forEach.call(el.querySelectorAll('.opt-btn[data-k="' + b.dataset.k + '"]'), function(x){ x.classList.toggle('on', x === b); });
+      if(b.dataset.k === 'attend') document.getElementById('proxy').classList.toggle('on', b.dataset.v === '代理出席');
+      if(b.dataset.k === 'obs') document.getElementById('obsbox').classList.toggle('on', b.dataset.v === 'あり');
+    };
+  });
+  ['proxyName','proxyYaku','note','obsNames'].forEach(function(id){ var x = document.getElementById(id); if(x) x.oninput = function(){ S[id] = x.value; }; });
+  document.getElementById('send').onclick = submit;
+  var gd = document.getElementById('goDetail'); if(gd) gd.onclick = function(){ postUp({ type: 'showDetail', id: S.meetingId }); };
+}
+
+function btn(k, v, cls, label){
+  return '<button type="button" class="opt-btn ' + (cls||'') + (S[k] === v ? ' on' : '') + '" data-k="' + k + '" data-v="' + esc(v) + '">' + esc(label || v) + '</button>';
+}
+
+function submit(){
+  var m = meeting(), hasParty = m.party === '有', err = document.getElementById('err');
+  var problems = [];
+  if(!S.name) problems.push('お名前を選んでください');
+  if(!S.attend) problems.push('会議の出欠を選んでください');
+  if(S.attend === '代理出席' && !S.proxyName) problems.push('代理者の氏名を入力してください');
+  if(hasParty && !S.party) problems.push('懇親会の出欠を選んでください');
+  if(problems.length){ err.textContent = problems.join('　／　'); err.style.display = 'block'; window.scrollTo(0, 0); return; }
+  err.style.display = 'none';
+  // 懇親会のキャンセル期限を過ぎてから「出席 → 欠席」に変えるとき：一度だけやわらかく確認する
+  var ex = existing(), late = hasParty && m.cancel && m.cancel.passed && ex && ['出席','遅参','代理出席'].indexOf(ex.party) >= 0 && S.party === '欠席';
+  if(late && !S._cancelOk){
+    var old = document.getElementById('lateBox'); if(old) old.remove();
+    var box = document.createElement('div'); box.id = 'lateBox';
+    box.style.cssText = 'margin:12px 0;padding:12px 14px;border:1.5px solid #f5c98a;background:#fff4e5;border-radius:10px;font-size:13.5px;line-height:1.6';
+    box.innerHTML = '<b style="display:block;margin-bottom:4px">懇親会のキャンセル期限（' + esc(m.cancel.text) + '）を過ぎています</b>お店に人数をお伝えした後のため、懇親会費' + (m.cancel.full ? '' : '（¥' + Number(m.cancel.amount).toLocaleString('ja-JP') + '）') + 'をご負担いただく場合があります。ご事情があればそのまま送信いただき、備考に一言添えてください。' +
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="again" id="lateGo" style="margin:0">このまま欠席で送信する</button><button type="button" class="again" id="lateBack" style="margin:0;background:#fff;color:var(--blue);border:2px solid var(--blue)">やめる（回答を直す）</button></div>';
+    var sendBtn = document.getElementById('send'); sendBtn.parentNode.insertBefore(box, sendBtn);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('lateGo').onclick = function(){ S._cancelOk = true; box.remove(); submit(); };
+    document.getElementById('lateBack').onclick = function(){ box.remove(); };
+    return;
+  }
+  S._cancelOk = false;
+  var b = document.getElementById('send'); b.disabled = true; b.textContent = '送信中…';
+  var payload = {
+    meetingId: S.meetingId, name: S.name, attend: S.attend,
+    party: hasParty ? S.party : '',
+    proxyName: S.attend === '代理出席' ? S.proxyName : '', proxyYaku: S.attend === '代理出席' ? S.proxyYaku : '',
+    mandate: S.attend === '代理出席' ? S.mandate : '',
+    note: S.note, obs: S.obs, obsNames: S.obs === 'あり' ? S.obsNames : '', obsParty: S.obs === 'あり' ? S.obsParty : ''
+  };
+  google.script.run.withSuccessHandler(function(r){
+    document.getElementById('app').innerHTML =
+      '<div class="done-box"><div class="en">THANK YOU</div><p>ご回答を受け付けました。</p>' +
+      '<div class="sum"><div><span>会議</span><b>' + esc(m.label) + '</b></div><div><span>お名前</span><b>' + esc(S.name) + '</b></div>' +
+      '<div><span>会議の出欠</span><b>' + esc(S.attend) + '</b></div>' + (hasParty ? '<div><span>懇親会</span><b>' + esc(S.party) + '</b></div>' : '') + '</div>' +
+      '<p style="font-size:12px;color:#6b7280;margin-top:14px">変更がある場合は、同じURLから再度ご回答ください。</p>' +
+      '<button class="again" id="again">続けて回答する</button>' +
+      (EMBED ? '' : '<div style="margin-top:14px"><a class="again" style="display:inline-block;text-decoration:none;background:#fff;color:var(--blue);border:2px solid var(--blue)" href="' + esc(location.origin + location.pathname.replace(/answer\.html$/, '') + '?id=' + encodeURIComponent(S.meetingId)) + '">出欠状況を見る</a></div>') + '</div>';
+    window.scrollTo(0, 0);
+    try { localStorage.setItem('ans_me', S.name); } catch(e){}
+    if(EMBED){ postUp({ type: 'answered', id: S.meetingId, name: S.name }); }
+    document.getElementById('again').onclick = function(){
+      // 回答一覧を更新してから、同じ会議で入力をやり直す
+      S = { meetingId: S.meetingId, name:'', attend:'', party:'', proxyName:'', proxyYaku:'', mandate:'', note:'', obs:'なし', obsNames:'', obsParty:'' };
+      document.getElementById('app').innerHTML = '<div class="msg load">回答フォームを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div>';
+      google.script.run.withSuccessHandler(function(d){ D = d; render(); window.scrollTo(0, 0); })
+        .withFailureHandler(function(e){ document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>'; })
+        .answerData();
+    };
+  }).withFailureHandler(function(e){
+    b.disabled = false; b.textContent = '回答を送信する';
+    err.textContent = '送信できませんでした：' + e.message; err.style.display = 'block';
+  }).submitAnswer(payload);
+}
+</script>
+</body>
+</html>

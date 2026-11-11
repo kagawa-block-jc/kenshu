@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会員研修委員会 出欠状況</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#0a5aa8; --blue-deep:#063b73; --blue-soft:#e8f0fa; --ink:#111318; --muted:#6b7280; --line:#e6e8ec; --bg:#fff;
+    --ok:#0f7b52; --ok-bg:#e4f3ea;
+    --absent:#d92d20; --absent-bg:#fde8e6;
+    --pending:#1a66c8; --pending-bg:#e4eefb;
+    --noreply:#c98a12; --noreply-bg:#fff4d6;
+    --display:"Anton","Impact","Arial Narrow",sans-serif;
+    --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+
+
+  /* ヒーロー */
+  .hero{padding:26px 20px 18px;position:relative;overflow:hidden}
+  .hero .en{font-family:var(--display);font-size:56px;line-height:.92;letter-spacing:.01em;color:var(--ink);text-transform:uppercase}
+  .hero .en b{color:var(--blue);font-weight:400}
+  .hero .org{font-size:12px;font-weight:700;margin-top:14px;color:#333}
+  .hero .ttl{font-size:24px;font-weight:900;letter-spacing:.02em;line-height:1.3;margin:2px 0 12px}
+  .meta{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500}
+  .meta div{display:flex;align-items:center;gap:10px}
+  .meta svg{width:20px;height:20px;flex:0 0 20px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .rule{height:3px;background:var(--blue-deep);margin:0}
+
+  /* 会議切替 */
+  .selbar{padding:12px 20px 0;position:relative}
+  .selbar .copylink{display:block;margin:8px 0 0;background:none;border:0;color:var(--blue);font:inherit;font-size:12.5px;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
+  .selbar select{width:100%;appearance:none;-webkit-appearance:none;padding:10px 40px 10px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-weight:700;font-size:14px;color:var(--ink)}
+  .selbar:after{content:"";position:absolute;right:34px;top:50%;width:7px;height:7px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:translateY(-20%) rotate(45deg);pointer-events:none}
+
+  /* セクション */
+  section{padding:26px 20px 8px}
+  .h{margin-bottom:14px}
+  .h .jp{font-size:26px;font-weight:900;letter-spacing:.25em;color:var(--blue);line-height:1}
+  .h .en{font-family:var(--display);font-size:12px;letter-spacing:.3em;color:var(--blue);margin-top:4px}
+
+  /* 集計 */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(6,1fr)}}
+  .stat{border-radius:10px;padding:10px 6px 9px;text-align:center;background:var(--blue-soft);border-bottom:3px solid var(--blue)}
+  .stat b{display:block;font-family:var(--display);font-size:34px;line-height:1;color:var(--blue)}
+  .stat span{display:block;font-size:11px;font-weight:700;margin-top:4px;color:#3a3f47}
+  .stat .plus{display:block;font-style:normal;font-size:10px;font-weight:900;color:#7c5cbf;margin-top:3px;background:#f1edfb;border-radius:4px;padding:1px 4px}
+  .stat.ok{background:var(--ok-bg);border-color:var(--ok)}.stat.ok b{color:var(--ok)}
+  .stat.absent{background:var(--absent-bg);border-color:var(--absent)}.stat.absent b{color:var(--absent)}
+  .stat.pending{background:var(--pending-bg);border-color:var(--pending)}.stat.pending b{color:var(--pending)}
+  .stat.noreply{background:var(--noreply-bg);border-color:var(--noreply)}.stat.noreply b{color:var(--noreply)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;font-weight:700;color:#3a3f47;margin:0 2px 8px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+  /* 名簿 */
+  .grp{display:flex;align-items:baseline;gap:8px;margin:18px 0 8px}
+  .grp .n{font-family:var(--display);font-size:22px;color:var(--blue);letter-spacing:.02em}
+  .grp .t{font-size:14px;font-weight:900}
+  .grp .c{font-size:12px;color:var(--muted);margin-left:auto}
+  .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px 11px 14px;border-left:4px solid #e6e8ec;border-bottom:1px solid var(--line)}
+  .row .who b{display:block;font-size:15px;font-weight:700}
+  .row .who small{display:block;font-size:12px;color:var(--muted)}
+  .tag.chg{box-shadow:0 0 0 2.5px #f2c94c}   /* 回答を変えた項目：黄色い枠 */
+  .row .who small.memo{margin-top:3px;color:#8a6100;background:#fff3d6;padding:2px 8px;border-radius:5px;display:inline-block;white-space:normal;line-height:1.4}
+  .row.absent{background:#fff6f5;border-left-color:var(--absent)}
+  .row.pending{background:#f3f7fd;border-left-color:var(--pending)}
+  .row.noreply{background:#fffaed;border-left-color:var(--noreply)}
+  .row.in{border-left-color:var(--ok)}
+  .row.obs{background:#f7f5ff;border-left-color:#7c5cbf}
+  .row.obs.in{border-left-color:var(--ok)}
+  .tag{display:inline-block;min-width:3.4em;text-align:center;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:900;letter-spacing:.04em;white-space:nowrap}
+  .tag.attend,.tag.late{background:var(--blue-soft);color:var(--blue)}
+  .tag.zoom{background:var(--ok-bg);color:var(--ok)}
+  .tag.proxy{background:#f6ecd3;color:#7a5a15}
+  .tag.absent{background:var(--absent);color:#fff}
+  .tag.pending{background:var(--pending);color:#fff}
+  .tag.noreply{background:var(--noreply);color:#fff}
+  .tag.none{background:transparent;color:#c0c5cc;font-weight:400}
+  .col{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .col em{font-style:normal;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em}
+  .in-mark{font-size:11px;font-weight:900;color:var(--ok)}
+  .updated{font-size:11px;color:var(--muted);text-align:right;margin-top:12px;letter-spacing:.06em}
+
+  /* 会場・懇親会 */
+  .kv{display:grid;grid-template-columns:5.5em 1fr;row-gap:12px;column-gap:12px;font-size:15px}
+  .kv dt{font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--blue);padding-top:3px}
+  .kv dd{margin:0;font-weight:500}
+  .kv dd b{font-size:17px;font-weight:900}
+  /* 会場の見出しカード：日時と会場を一番大きく。服装などは普通の太さ */
+  .vhero{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:#fff}
+  .vhero .when{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .vhero .date{font-family:var(--display);font-size:34px;line-height:1;color:var(--blue);letter-spacing:.02em}
+  .vhero .date small{font-family:var(--sans);font-size:14px;font-weight:900;color:var(--ink);margin-left:4px}
+  .vhero .time{font-family:var(--display);font-size:30px;line-height:1;color:var(--ink)}
+  .vhero .time small{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--muted);margin-left:4px}
+  .vhero .gather{margin-top:8px;display:inline-block;background:#fff4e5;color:#7a4b00;border:1px solid #f5c98a;border-radius:8px;padding:5px 10px;font-size:13.5px;line-height:1.4}
+  .vhero .gather b{font-size:15px}
+  .vhero .where{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .vhero .where .pin{flex:0 0 auto;font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--blue);padding-top:5px}
+  .vhero .where b{font-size:19px;font-weight:900;line-height:1.35;word-break:break-word}
+  .kv dd.plain{font-weight:500;color:var(--ink)}
+  .pname{font-size:18px;font-weight:900;line-height:1.35}
+  /* 懇親会：店名カード＋会費・人数の2枚 */
+  .topics{border:1.5px solid var(--line);border-radius:12px;padding:12px 16px 12px;margin:-4px 0 14px;background:#fff}
+  .topics .tl{font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--blue);margin-bottom:4px}
+  .topics ol{margin:0;padding-left:24px;font-size:15px;font-weight:700;line-height:1.55}
+  .topics li{padding:2px 0}
+  .topics li::marker{color:var(--blue);font-weight:900}
+  .phero{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff}
+  .phero .pin{font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--blue)}
+  .phero .nm{font-size:21px;font-weight:900;line-height:1.3;margin-top:2px;word-break:break-word}
+  .phero .ad{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .phero .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .pstats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .pstat{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+  .pstat .l{font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--blue)}
+  .pstat .v{font-family:var(--display);font-size:30px;line-height:1.1;color:var(--ink);margin-top:4px}
+  .pstat .v.fee{color:var(--blue)}
+  .pstat .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .fee{display:inline-block;font-family:var(--display);font-size:24px;color:var(--blue);line-height:1}
+  .fee small{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--muted);margin-left:6px}
+  .online{display:inline-block;background:var(--blue);color:#fff;text-decoration:none;font-weight:900;padding:10px 18px;border-radius:8px;font-size:14px}
+  .online.agenda{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+  .empty{color:var(--muted);font-size:14px}
+
+  /* 下タブ */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{flex:1;text-align:center;padding:10px 4px 8px;text-decoration:none;color:#6b7280;font-size:12px;font-weight:900;position:relative;border-right:1px solid var(--line)}
+  .tabbar a:last-child{border-right:0}
+  .tabbar svg{display:block;margin:0 auto 3px;width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar a.on{color:var(--blue)}
+  .tabbar a.on:after{content:"";position:absolute;left:24%;right:24%;bottom:4px;height:3px;background:var(--blue);border-radius:2px}
+  .msg{padding:80px 16px;text-align:center;color:var(--muted);font-size:17px;font-weight:700}
+  .msg.load::before{content:"";display:block;width:36px;height:36px;margin:0 auto 14px;border:4px solid #dfe5ee;border-top-color:var(--blue);border-radius:50%;animation:spin .9s linear infinite}
+  .msg.load small{display:block;font-weight:400;font-size:13px;margin-top:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* 回答（埋め込み）セクション */
+  #s-answer{padding:22px 20px 10px}
+  #s-answer .ansbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:var(--blue);color:#fff;border:0;border-radius:12px;padding:16px 18px;font:inherit;font-weight:900;font-size:17px;cursor:pointer;text-align:left}
+  #s-answer .ansbtn small{display:block;font-weight:500;font-size:12.5px;opacity:.9;margin-top:3px}
+  #s-answer .ansbtn .arrow{font-size:20px;flex-shrink:0}
+  #s-answer.closed .ansbtn{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+  #s-answer .ansnote{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+  #s-answer .frame{display:none;margin-top:12px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;position:relative}
+  #s-answer .frame .ld{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-weight:700;font-size:15px;background:#fff;z-index:1}
+  #s-answer .frame .ld::before{content:"";width:32px;height:32px;border:4px solid #dfe5ee;border-top-color:var(--blue);border-radius:50%;animation:spin .9s linear infinite}
+  #s-answer .frame.ready .ld{display:none}
+  #s-answer.open .frame{display:block}
+  #s-answer iframe{display:block;width:100%;border:0;min-height:320px;height:900px}
+  #s-answer .mlist{margin-top:10px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  #s-answer .mlist .mrow{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #s-answer .mlist .mrow:last-child{border-bottom:0}
+  #s-answer .mlist .mrow.on{background:#eef3fc;box-shadow:inset 4px 0 0 var(--blue)}
+  #s-answer .mlist .d{min-width:54px;text-align:center;line-height:1.1}
+  #s-answer .mlist .d b{display:block;font-size:18px;font-family:var(--display, inherit)}
+  #s-answer .mlist .d small{font-size:11px;color:var(--muted)}
+  #s-answer .mlist .t{flex:1;min-width:0}
+  #s-answer .mlist .t b{display:block;font-size:14.5px}
+  #s-answer .mlist .t small{font-size:12px;color:var(--muted)}
+  #s-answer .mlist .st{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  #s-answer .mlist .st.ok{background:#e3f3e8;color:var(--ok)}
+  #s-answer .mlist .st.ng{background:#fff3dc;color:#b8860b}
+  #s-answer .mlist .st.na{background:#eef1f5;color:var(--muted)}
+  #s-answer .mlist .late{color:#b8860b;font-weight:700}
+  #s-answer .who{font-size:12px;color:var(--muted);margin:8px 2px 0}
+  #s-answer .who button{background:none;border:0;color:var(--blue);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:0 0 0 6px}
+  /* 管理ページへ */
+  #s-admin{padding:18px 20px 28px}
+  #s-admin .adminbtn{display:block;text-align:center;border:2px solid var(--blue);border-radius:12px;padding:14px 16px;color:var(--blue);background:#fff;text-decoration:none;font-weight:900;font-size:16px}
+  #s-admin .adminbtn small{display:block;font-weight:500;font-size:12px;margin-top:3px;color:var(--muted)}
+  #s-admin .adminbtn:hover{background:var(--blue);color:#fff}
+  #s-admin .adminbtn:hover small{color:#fff}
+  /* 今後の予定 */
+  #s-sched .row{display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px dashed var(--line);cursor:pointer}
+  #s-sched .row:last-child{border-bottom:0}
+  #s-sched .d{min-width:58px;text-align:center;line-height:1.1}
+  #s-sched .d b{display:block;font-size:19px;font-family:var(--display, inherit)}
+  #s-sched .d small{font-size:11px;color:var(--muted)}
+  #s-sched .t{flex:1;min-width:0}
+  #s-sched .t b{display:block;font-size:14.5px}
+  #s-sched .t small{font-size:12px;color:var(--muted)}
+  #s-sched .t small.tp{display:block;margin-top:2px;color:var(--ink);opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #s-sched .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1f5;color:var(--muted);white-space:nowrap}
+  #s-sched .tag.now{background:var(--blue);color:#fff}
+  #s-sched .tag.acc{background:#e3f3e8;color:var(--ok)}
+  #s-sched .row.cur{background:#f4f7fd;border-radius:8px}
+
+
+  /* ---------- 日程調整 ---------- */
+  #s-poll .row{display:flex;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px dashed var(--line);cursor:pointer;border-left:0}
+  #s-poll .row .t{flex:1;min-width:0}
+  #s-poll .row .t b{display:block;font-size:14.5px}
+  #s-poll .row .t small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  #s-poll .row .st{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  #s-poll .row .st.ok{background:#e3f3e8;color:var(--ok)}
+  #s-poll .row .st.ng{background:#fff3dc;color:#b8860b}
+  #s-poll .row .tag{font-size:11px;padding:3px 8px;border-radius:999px;background:#eef1f5;color:var(--muted);white-space:nowrap}
+  #s-poll .row .tag.acc{background:#e3f3e8;color:var(--ok)}
+  #s-poll .row .tag.now{background:var(--blue-soft);color:var(--blue)}
+  #s-poll .pollnote{font-size:12px;color:var(--muted);margin-top:8px}
+  #app.pollview{display:block;max-width:820px;margin:0 auto;background:#fff}
+  .pollview .hero .ttl{font-size:22px}
+  .pollview .pfixed{margin-top:10px;background:var(--blue-soft);color:var(--blue);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700}
+  .pollview .pfixed.off{background:#f1f1f3;color:var(--muted)}
+  .pollview section{padding:22px 20px 8px}
+  .pollview .pf{margin:12px 0}
+  .pollview .pf label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .pollview .pf select,.pollview .pf input{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:#fff}
+  .pollview .pmine{font-size:12px;color:var(--muted);margin-top:6px}
+  .pollview .pcands{border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+  .pollview .pc{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .pollview .pc:last-child{border-bottom:0}
+  .pollview .pcl{flex:1;min-width:0}
+  .pollview .pcl b{font-size:16px}
+  .pollview .pcl small{margin-left:8px;font-size:13px;color:var(--muted);font-weight:700}
+  .pollview .pcl .pcn{display:block;width:100%;margin-top:5px;padding:5px 8px;border:1px dashed #cfd5de;border-radius:8px;font:inherit;font-size:12.5px;background:#fafbfc}
+  .pollview .pcl .pcn:focus{border-style:solid;border-color:var(--blue);outline:0;background:#fff}
+  .pollview .pc{align-items:flex-start}
+  .pollview .prw i{font-style:normal;color:#b8860b}
+  .pollview .pcb{display:flex;gap:6px}
+  .pollview .pm{width:46px;height:42px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:20px;font-weight:900;color:#9aa3af;cursor:pointer}
+  .pollview .pm.on.mo{background:var(--ok);border-color:var(--ok);color:#fff}
+  .pollview .pm.on.md{background:#e6a700;border-color:#e6a700;color:#fff}
+  .pollview .pm.on.mx{background:var(--absent);border-color:var(--absent);color:#fff}
+  .pollview .pquick{display:flex;gap:6px;margin-top:8px}
+  .pollview .pq{flex:1;padding:8px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+  .pollview .psend{width:100%;margin-top:6px;padding:15px;border:0;border-radius:12px;background:var(--blue);color:#fff;font:inherit;font-size:16px;font-weight:900;cursor:pointer}
+  .pollview .psend:disabled{opacity:.6}
+  .pollview .perr{color:var(--absent);font-size:13px;font-weight:700;margin-top:8px;min-height:1em}
+  .pollview #s-psum .h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+  .pollview #s-psum .h .c{margin-left:auto;font-size:12px;color:var(--muted)}
+  .pollview .pr{padding:10px 0;border-bottom:1px solid var(--line)}
+  .pollview .pr.top{background:#f3f8f1;margin:0 -8px;padding:10px 8px;border-radius:8px}
+  .pollview .pr.fixed{background:var(--blue-soft);margin:0 -8px;padding:10px 8px;border-radius:8px}
+  .pollview .prh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pollview .prh b{font-size:15px}
+  .pollview .prh .tag{font-size:11px;padding:2px 8px;border-radius:999px}
+  .pollview .prh .tag.acc{background:#e3f3e8;color:var(--ok)}
+  .pollview .prh .tag.now{background:var(--blue);color:#fff}
+  .pollview .prn{margin-left:auto;display:flex;gap:8px;font-size:13px;font-weight:900}
+  .pollview .prn em{font-style:normal}
+  .pollview .prn .o{color:var(--ok)} .pollview .prn .d{color:#b8860b} .pollview .prn .x{color:var(--absent)}
+  .pollview .pbar{height:10px;background:#eef1f5;border-radius:999px;overflow:hidden;display:flex;margin:6px 0}
+  .pollview .pbar .o{display:block;height:100%;background:var(--ok)}
+  .pollview .pbar .d{display:block;height:100%;background:#e6a700}
+  .pollview .prw{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .pollview .prw em{font-style:normal;font-weight:900;margin-right:3px}
+  .pollview .pcm{margin-top:12px;font-size:13px;color:var(--muted)}
+  .pollview .pcm b{display:block;color:var(--ink);margin-bottom:4px}
+  .pollview #s-pfoot{display:flex;flex-direction:column;gap:8px;padding-bottom:40px}
+  .pollview .pback{padding:13px;border:1.5px solid var(--blue);border-radius:12px;background:#fff;color:var(--blue);font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+  .ptoast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#111318;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;z-index:50}
+  @media(min-width:900px){
+    #app.pollview{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"hero hero" "ans sum" "foot sum";align-content:start;max-width:1100px}
+    .pollview .hero{grid-area:hero;border-right:0;border-bottom:1px solid var(--line)}
+    .pollview #s-pans{grid-area:ans;border-right:1px solid var(--line);padding:26px 32px}
+    .pollview #s-psum{grid-area:sum;padding:26px 32px}
+    .pollview #s-pfoot{grid-area:foot;padding:0 32px 32px;border-right:1px solid var(--line)}
+    #s-poll{grid-area:poll;border-right:1px solid var(--line);padding:0 32px 24px}
+  }
+
+
+  /* 日程調整：区分ごとのまとまり・作成ボタン・主催者操作・作成フォーム */
+  /* プロジェクト：上部のチップと帯。URLは同じで、見え方だけ切り替える */
+  .pjbar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 20px 0}
+  .pjbar button{border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+  .pjbar button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .pjband{margin:10px 20px 0;background:#f3eefb;border:1.5px solid #d9c9f2;border-radius:10px;padding:10px 12px}
+  .pjband .nm{font-size:16px;font-weight:900;color:#4c1d95}
+  .pjband .nm small{font-weight:700;color:#6b21a8;font-size:12px;margin-left:8px}
+  .pjband .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .pjband .acts button,.pjband .acts a{border:1.5px solid #c4b5fd;background:#fff;color:#4c1d95;border-radius:8px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none}
+  .pjband .acts .pri{background:#6b21a8;border-color:#6b21a8;color:#fff}
+  #s-sched .sgh{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700;margin:12px 0 4px;color:#444}
+  #s-sched .sgh .pj{color:#6b21a8}
+  #s-sched .sgh .k{background:#eef1f5;color:#444;padding:2px 8px;border-radius:999px}
+  #s-sched .empty.pj{padding:8px 0 2px}
+  #s-poll .pgrp{margin-top:10px}
+  #s-poll .pgh{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700;margin:6px 0 2px}
+  #s-poll .pgh .k{background:#eef1f5;color:#444;padding:2px 8px;border-radius:999px}
+  #s-poll .pgh .pj{color:#6b21a8}
+  #s-poll .pollmake{display:block;width:100%;margin-top:12px;padding:13px;border:2px dashed var(--blue);border-radius:12px;background:#fff;color:var(--blue);font:inherit;font-size:15px;font-weight:900;text-align:left;cursor:pointer}
+  #s-poll .pollmake small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:2px}
+  .pollview .ktag{display:inline-block;background:#eef1f5;color:#444;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;margin-right:4px}
+  .pollview .ktag.pj{background:#f3e8ff;color:#6b21a8}
+  .pollview #s-pown .pownnote{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+  .pollview .pownbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .pollview .pownbtns button{padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .pollview .pownbtns button.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+  .pollview .pownbtns button.dng{color:var(--absent);border-color:#f3c2bd}
+  .pollview .pownfix button{display:flex;justify-content:space-between;width:100%;margin-top:6px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  .pollview .pownfix button em{font-style:normal;font-size:12px;color:var(--muted)}
+  .pollview .pownfix button.on{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}
+  .pollview .pfro{padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#f4f6f9;font-weight:700}
+  .pollview .pfhint{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .pollview .pfseg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .pollview .pfseg button{padding:10px 8px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .pollview .pfseg button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .pollview .pfc{display:flex;gap:6px;margin-bottom:6px}
+  .pollview .pfc input{padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:14px;min-width:0}
+  .pollview .pfc input[type=date]{flex:1}
+  .pollview .pfc input[type=time]{width:112px}
+  .pollview .pfc button{width:40px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:16px;cursor:pointer}
+  .pollview .pfadd{display:flex;gap:6px;flex-wrap:wrap}
+  .pollview .pfadd button{padding:7px 12px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+  @media(min-width:900px){
+    #app.pollview{grid-template-areas:"hero hero" "ans sum" "own sum" "foot sum"}
+    .pollview #s-pown{grid-area:own;border-right:1px solid var(--line);padding:0 32px 26px}
+    .pollview #s-pform{grid-area:ans;border-right:1px solid var(--line);padding:26px 32px}
+  }
+
+  /* ---------- パソコン（幅900px以上）：2カラムのダッシュボード ---------- */
+  @media(min-width:900px){
+    body{padding-bottom:0;background:#f4f6f9}
+    #app{display:grid;grid-template-columns:400px minmax(0,1fr);grid-template-areas:"answer answer" "hero status" "sel status" "venue status" "party status" "sched status" "poll status" "late status" "admin status" ". status";grid-template-rows:auto auto auto auto auto auto auto auto auto 1fr;
+         align-content:start;column-gap:0;min-height:100vh;max-width:1400px;margin:0 auto;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.06)}
+    .hero{grid-area:hero;padding:36px 32px 24px;border-right:1px solid var(--line)}
+    .hero .en{font-size:54px}
+    .hero .ttl{font-size:26px}
+    .meta{font-size:15px}
+    .rule{display:none}
+    .selbar{grid-area:sel;padding:0 32px 8px;border-right:1px solid var(--line)}
+    .pjbar{padding:0 32px 6px;border-right:1px solid var(--line)} .pjband{margin:0 32px 10px}
+    .selbar:after{right:46px}
+    #s-venue{grid-area:venue;border-right:1px solid var(--line);padding:26px 32px 8px}
+    #s-party{grid-area:party;border-right:1px solid var(--line);padding:26px 32px 32px}
+    #s-status{grid-area:status;padding:36px 40px 40px}
+    #s-answer{grid-area:answer;padding:24px 40px 0;border-bottom:1px solid var(--line)}
+    #s-answer.closed{border-bottom:0}
+    #s-answer.late{grid-area:late;border-right:1px solid var(--line);padding:0 32px 32px}
+    #s-admin{grid-area:admin;border-right:1px solid var(--line);padding:0 32px 32px}
+    #s-sched{grid-area:sched;border-right:1px solid var(--line);padding:0 32px 32px}
+    .h .jp{font-size:30px}
+    .stats{grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px}
+    .stat{padding:14px 8px 12px}
+    .stat b{font-size:44px}
+    .stat span{font-size:13px}
+    .legend{font-size:12px;margin-bottom:6px}
+    .grp{margin:24px 0 10px}
+    .grp .n{font-size:26px}
+    .grp .t{font-size:17px}
+    .grp .c{font-size:13px}
+    .row{padding:14px 18px 14px 20px;gap:22px}
+    .row .who b{font-size:19px}
+    .row .who small{font-size:13px}
+    .tag{font-size:15px;padding:6px 16px;min-width:4.4em;border-radius:6px}
+    .col em{font-size:11px}
+    .kv{font-size:16px}
+    .kv dd b{font-size:18px}
+    .vhero .date{font-size:40px} .vhero .time{font-size:34px} .vhero .where b{font-size:21px}
+    .phero .nm{font-size:23px} .pstat .v{font-size:34px}
+    .tabbar{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="app"><div class="msg load">出欠データを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div></div>
+<select id="sel" hidden></select>
+
+<script>
+// ===== GitHub Pages 版：Apps Script との通信（ここだけ環境ごとに違う） =====
+// 会員研修委員会の Apps Script WebアプリURL（管理ページ「ページURL」のアテンダンスURLから ?view=1 を除いたもの）
+var API_URL = 'https://script.google.com/macros/s/AKfycbzZRNOL2MYCy9CneqGn47x0MWEoWecj1_Kd4HmIOJKcmVTdMIppWtl2YxOBruZRoMdI/exec';
+var SITE = location.origin + location.pathname.replace(/index\.html$/, '');   // このページのURL（?なし）。リンクのコピーに使う
+var ANSWER_PAGE = SITE + 'answer.html';   // 同じ場所に置いた回答ページ
+function qp(k){ try { return new URLSearchParams(location.search).get(k) || ''; } catch(e){ return ''; } }
+// Apps Script の google.script.run と同じ形で使える小さな代わり（POST で関数名と引数を送る）
+window.google = { script: { run: (function(){
+  var FNS = ['listViewMeetings','loadView','answerData','pollData','pollList','pollSubmit','pollCreate','pollAdoptBy','pollSetStateBy'];
+  function mk(){
+    var ok = null, ng = null;
+    var o = { withSuccessHandler: function(f){ ok = f; return o; }, withFailureHandler: function(f){ ng = f; return o; } };
+    FNS.forEach(function(fn){
+      o[fn] = function(){
+        var args = Array.prototype.slice.call(arguments);
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+          .then(function(r){ return r.json(); })
+          .then(function(j){ if(!j || !j.ok) throw new Error((j && j.error) || '読み込めません'); if(ok) ok(j.r); })
+          .catch(function(e){ if(ng) ng(e); });
+      };
+    });
+    return o;
+  }
+  return { withSuccessHandler: function(f){ return mk().withSuccessHandler(f); }, withFailureHandler: function(f){ return mk().withFailureHandler(f); } };
+})() } };
+var ORG = {}, INIT = null;
+// 最初の表示に必要なものを1回で取ってから、ページ本体を動かす
+fetch(API_URL + '?api=view&id=' + encodeURIComponent(qp('id')) + '&project=' + encodeURIComponent(qp('project')) + '&poll=' + encodeURIComponent(qp('poll')) + '&t=' + Date.now(), { cache: 'no-store' })
+  .then(function(r){ return r.json(); })
+  .then(function(j){ if(!j || !j.ok) throw new Error((j && j.error) || '読み込めません'); ORG = j.org || {}; INIT = j.init || null; __main(); })
+  .catch(function(e){ document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + String(e && e.message || e) + '</div>'; });
+function __main(){
+function groupOf(p){ if(ORG.kind === 'ブロック') return p.kubun === 'ブロック役員' ? 'ブロック役員' : '各LOM 理事長・専務'; return String(p.kubun || '').trim() || '委員'; }
+function subOf(p){ return [ORG.kind === 'ブロック' && p.kubun !== 'ブロック役員' ? p.lom : '', p.yaku].filter(Boolean).join('　'); }
+var ICON = {
+  cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>',
+  list:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  cup:'<svg viewBox="0 0 24 24"><path d="M8 3h8l-1 9a3 3 0 0 1-6 0L8 3z"/><path d="M12 15v5M8 20h8"/></svg>'
+};
+var TAG = {'出席':['attend','出席'],'遅参':['late','遅参'],'欠席':['absent','欠席'],'未定':['pending','未定'],'出席（ZOOM）':['zoom','ZOOM'],'代理出席':['proxy','代理']};
+function tag(v){ var t = TAG[v]; return t ? '<span class="tag '+t[0]+'">'+t[1]+'</span>' : '<span class="tag noreply">未回答</span>'; }
+function partyTag(v){ if(!v) return '<span class="tag none">―</span>'; var t = TAG[v]; return t ? '<span class="tag '+t[0]+'">'+t[1]+'</span>' : '<span class="tag none">'+esc(v)+'</span>'; }
+function ring(h, on){ return on ? h.replace('class="tag ', 'class="tag chg ') : h; }   // 回答を変えた項目だけ黄色い枠
+function rowClass(p){ if(p.checkedIn) return 'in'; if(p.attend==='欠席') return 'absent'; if(p.attend==='未定') return 'pending'; if(!p.attend) return 'noreply'; return ''; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function yen(n){ return '¥' + (Number(n)||0).toLocaleString('ja-JP'); }
+var LIST = [];
+function fmtJ(s){ if(!s) return ''; var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return s; var d = new Date(+m[1], +m[2]-1, +m[3]); return (+m[2]) + '/' + (+m[3]) + '(' + '日月火水木金土'[d.getDay()] + ')'; }
+var CUR_ID = '';
+var PANEL_OPEN = false;   // 回答パネルの一覧から会議を切り替えたときは、切り替え後もパネルを開いておく
+// 埋め込んだ回答フォームからの連絡：高さ合わせ／回答完了（→ 出欠一覧を読み直す）
+// 回答パネルの「会議の詳細を見る」→ 会場の欄へ。戻れるように「回答に戻る」ボタンを出す
+function showDetail(id){
+  var go = function(){ var v = document.getElementById('s-venue'); if(v) v.scrollIntoView({ behavior: 'smooth', block: 'start' }); backToAnswer(true); };
+  if(id && id !== CUR_ID) load(id, go); else go();
+}
+function backToAnswer(show){
+  var b = document.getElementById('backAns');
+  if(!b){ b = document.createElement('button'); b.id = 'backAns'; b.type = 'button'; b.innerHTML = '↩ 出欠の回答に戻る'; b.style.cssText = 'position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:50;background:var(--blue);color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;display:none';
+    b.onclick = function(){ var sec = document.getElementById('s-answer'); if(sec){ sec.classList.add('open'); sec.classList.remove('closed'); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } b.style.display = 'none'; window.dispatchEvent(new Event('scroll')); };
+    document.body.appendChild(b); }
+  b.style.display = show ? '' : 'none';
+  var t = document.getElementById('toTop'); if(t && show) t.style.display = 'none';
+}
+// 下までスクロールしたら右下に「↑ 上へ」（回答パネルや予定の一覧がある上に戻る）
+(function(){
+  var b = document.createElement('button'); b.id = 'toTop'; b.type = 'button'; b.setAttribute('aria-label', 'ページの上へ'); b.innerHTML = '↑<small>上へ</small>';
+  b.style.cssText = 'position:fixed;right:14px;bottom:76px;z-index:40;width:52px;height:52px;border-radius:50%;background:#fff;color:var(--blue);border:2px solid var(--blue);font:inherit;font-weight:900;font-size:18px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1px';
+  b.querySelector('small').style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.05em';
+  b.onclick = function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(b); });
+  var upd = function(){ var back = document.getElementById('backAns'); var show = window.scrollY > 500 && !(back && back.style.display !== 'none'); b.style.display = show ? 'flex' : 'none'; };
+  window.addEventListener('scroll', upd, { passive: true }); window.addEventListener('resize', upd);
+})();
+window.addEventListener('message', function(ev){
+  var d = ev.data || {};
+  if(d.type === 'showDetail'){ showDetail(String(d.id || '')); return; }
+  if(d.type === 'answerHeight'){ var w = document.getElementById('ansFrameWrap'); if(w) w.classList.add('ready'); var fr = document.getElementById('ansFrame'); if(fr && d.h){ var nh = Math.max(320, Number(d.h) + 16); if(Math.abs(nh - (parseInt(fr.style.height) || 0)) > 4) fr.style.height = nh + 'px'; } }
+  if(d.type === 'answered'){
+    if(d.name){ try { localStorage.setItem('att_me', d.name); } catch(e){} }
+    setTimeout(function(){
+      if(!CUR_ID) return;
+      // 会議一覧（回答済の名前）と出欠一覧を読み直してから描き直す。パネルは開いたまま、選んでいた会議も保持
+      var keep = (document.querySelector('#s-answer .mrow.on') || {}).dataset; var keepId = keep ? keep.ans : '';
+      google.script.run.withSuccessHandler(function(list){ LIST = list; google.script.run.withSuccessHandler(function(x){ render(x, CUR_ID); var sec = document.getElementById('s-answer'); if(sec){ sec.classList.add('open'); sec.classList.remove('closed'); var ar = sec.querySelector('.arrow'); if(ar) ar.textContent = '▲'; } if(keepId){ var row = document.querySelector('#s-answer .mrow[data-ans="' + keepId + '"]'); if(row) row.click(); else { var fr = document.getElementById('ansFrame'); if(fr && !fr.src && fr.dataset.src) fr.src = fr.dataset.src; } } }).loadView(CUR_ID); }).listViewMeetings();
+    }, 1200);
+  }
+});
+
+var POLLS = (INIT && INIT.polls) || [];   // 日程調整（受付中など）の一覧。設定がONのときだけ入る
+var PROJECTS = (INIT && INIT.projects) || [];   // 進行中のプロジェクト（小委員会・事業）
+var PROJECT = qp('project').trim();   // ?project=名前 で開いたとき：その予定を先頭に。チップで切り替えられる
+if(PROJECT && !PROJECTS.some(function(p){ return p.name === PROJECT; })) PROJECTS.push({ name: PROJECT, leader: '' });   // 未登録でも会議に付いた名前なら入口になれる
+function projectUrl(name){ return SITE + (name ? '?project=' + encodeURIComponent(name) : ''); }
+function copyToClip(u, btn, label){ var done = function(){ if(btn){ btn.textContent = 'コピーしました'; setTimeout(function(){ btn.textContent = label; }, 2500); } }; if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(done, function(){ window.prompt('このURLをコピーしてください', u); }); } else { window.prompt('このURLをコピーしてください', u); } }
+function bootList(list){
+  LIST = list;
+  if(INIT && INIT.poll){ renderPoll(INIT.poll); return; }   // ?poll=ID で開いた → 日程調整ページ
+  if(!list.length){ document.getElementById('app').innerHTML = '<div class="msg">表示できる会議がありません</div>'; return; }
+  var initial = qp('id');
+  var cur = list.filter(function(m){ return m.current; })[0] || list[0];
+  var id = list.some(function(m){ return m.id === initial; }) ? initial : cur.id;
+  if(INIT && INIT.data && INIT.id === id) return render(INIT.data, id);   // 埋め込み済みならそのまま表示
+  load(id);
+}
+if(INIT && INIT.list) bootList(INIT.list);
+else google.script.run.withSuccessHandler(bootList).withFailureHandler(function(e){
+  document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>';
+}).listViewMeetings();
+
+function load(id, after){
+  document.getElementById('app').innerHTML = '<div class="msg load">出欠データを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div>';
+  google.script.run.withSuccessHandler(function(d){ render(d, id); if(after) after(); }).withFailureHandler(function(e){
+    document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>';
+  }).loadView(id);
+}
+
+function render(d, id){
+  CUR_ID = id;
+  document.getElementById('app').classList.remove('pollview');
+  var base = String(ORG.cal || '').split('?')[0];
+  var m = d.meeting, c = d.counts, hasParty = m.party === '有';
+  var obsList = d.observers || [];
+  var obsN = obsList.length, obsP = obsList.filter(function(o){ return o.party; }).length;
+  var h = '';
+
+  // ヒーロー
+  h += '<div class="hero dots">' +
+       '<div class="en">' + esc(ORG.en || '') + '<br><b>ATTENDANCE</b></div>' +
+       '<div class="org">' + esc(ORG.name || '') + '</div>' +
+       '<div class="ttl">' + esc(m.name) + '</div>' +
+       '<div class="meta">' +
+         '<div>' + ICON.cal + '<span>' + esc(m.date) + '　' + esc(m.time) + '～</span></div>' +
+         '<div>' + ICON.pin + '<span>' + esc(m.place) + '</span></div>' +
+       '</div></div>' +
+       '<div class="rule"></div>';
+
+  // 会議切替（複数あるときだけ）＋ この会議のリンクをコピー
+  h += '<div class="selbar">' + (LIST.length > 1 ? '<select id="sel2">' + LIST.map(function(x){
+      return '<option value="' + esc(x.id) + '"' + (x.id === id ? ' selected' : '') + '>' + esc(x.label) + '</option>';
+    }).join('') + '</select>' : '') +
+    (base ? '<button type="button" class="copylink" id="copyLink">この会議のリンクをコピー</button>' : '') + '</div>';
+
+  // プロジェクトのチップ（登録があるときだけ）＋ 入口から開いたときの帯
+  var pjOf = function(x){ return String(x.project || '').trim(); };
+  if(PROJECTS.length){
+    h += '<div class="pjbar"><button type="button" data-pj=""' + (!PROJECT ? ' class="on"' : '') + '>すべて</button>' +
+      PROJECTS.map(function(p){ return '<button type="button" data-pj="' + esc(p.name) + '"' + (p.name === PROJECT ? ' class="on"' : '') + '>📁 ' + esc(p.name) + '</button>'; }).join('') + '</div>';
+    if(PROJECT){
+      var pjInfo = PROJECTS.filter(function(p){ return p.name === PROJECT; })[0] || {};
+      h += '<div class="pjband"><div class="nm">📁 ' + esc(PROJECT) + (pjInfo.leader ? '<small>リーダー：' + esc(pjInfo.leader) + '</small>' : '') + '</div>' +
+        '<div class="acts"><button type="button" class="pri" data-pj="">すべての予定を見る</button><button type="button" id="pjCopy">この小委員会専用のURLをコピー</button></div></div>';
+    }
+  }
+
+  // 回答（閲覧ページに埋め込み）：受付中は先頭、締切後は末尾に
+  var cur = LIST.filter(function(x){ return x.id === id; })[0] || {};
+  var accepting = !!cur.accepting, isPast = !!cur.past;
+  // 受付中の会議（複数あれば一覧で選んで順に回答できる）。自分の名前を覚えていれば 回答済／未回答 を出す
+  var acc = LIST.filter(function(x){ return x.accepting; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  if(PROJECT){ var accP = acc.filter(function(x){ return pjOf(x) === PROJECT; }); if(accP.length) acc = accP; }   // 入口のプロジェクトに受付中があればそれだけ
+  var me = ''; try { me = localStorage.getItem('att_me') || ''; } catch(e){}
+  // パネルで最初に開く会議＝表示中の会議（開催前なら締切後でも変更できる）。開催済みなら受付中の先頭
+  var target = !isPast ? id : (acc[0] ? acc[0].id : id);
+  // 一覧に出す会議：表示中の会議（締切後なら「締切後・変更可」）＋受付中の会議
+  var listM = acc.slice();
+  if(!isPast && !accepting && cur.id) listM.unshift(cur);
+  var ansUrlOf = function(mid){ return base ? ANSWER_PAGE + '?id=' + encodeURIComponent(mid) + '&embed=1' + (me ? '&me=' + encodeURIComponent(me) : '') + (PROJECT ? '&project=' + encodeURIComponent(PROJECT) : '') : ''; };
+  var ansSec = '';
+  if(base && (!isPast || acc.length)){
+    var panelOpen = accepting || (!isPast ? false : false);
+    var sub = accepting ? (cur.deadline ? '回答締切 ' + esc(fmtJ(cur.deadline)) + '　／　お名前を選んで出欠を送信' : 'お名前を選んで出欠を送信')
+            : !isPast ? 'この会議の締切は過ぎていますが、変更・修正はそのまま反映されます' + (acc.length ? '（受付中の会議 ' + acc.length + ' 件も下の一覧から）' : '')
+            : acc.length ? '受付中の会議が ' + acc.length + ' 件あります' : '回答の締切は過ぎていますが、変更は反映されます';
+    var title = '出欠を回答する' + (acc.length > 1 ? '（受付中 ' + acc.length + '件）' : '');
+    var mlist = '';
+    if(listM.length > 1){
+      mlist = '<div class="mlist">' + listM.map(function(x){ var dm = x.date.split('-'), dt = new Date(x.date + 'T00:00:00'); var st = !me ? '' : (x.answered || []).indexOf(me) >= 0 ? '<span class="st ok">回答済</span>' : '<span class="st ng">未回答</span>'; return '<div class="mrow' + (x.id === target ? ' on' : '') + '" data-ans="' + esc(x.id) + '"><div class="d"><b>' + (+dm[1]) + '/' + (+dm[2]) + '</b><small>' + '日月火水木金土'[dt.getDay()] + '</small></div><div class="t"><b>' + esc(x.name) + '</b><small>' + esc(x.type) + (x.time ? '　' + esc(x.time) + '～' : '') + (x.gather ? '<span style="color:#b45309">（' + esc(x.gather.time) + '集合）</span>' : '') + (x.place ? '　📍 ' + esc(x.place) : '') + (x.deadline ? '　締切 ' + esc(fmtJ(x.deadline)) : '') + (x.accepting ? '' : '　<span class="late">締切後・変更可</span>') + '</small></div>' + st + '</div>'; }).join('') + '</div>' +
+        '<div class="who">' + (me ? '「' + esc(me) + '」として回答済／未回答を表示<button type="button" id="meClear">別の人</button>' : '一度回答すると、次からあなたの回答済／未回答が出ます') + '</div>';
+    }
+    var curAcc = accepting || acc.some(function(x){ return x.id === id; });
+    ansSec = '<section id="s-answer" class="' + (accepting ? 'open' : 'closed late') + '">' +
+      '<button type="button" class="ansbtn" id="ansToggle"><span>' + title + '<small>' + sub + '</small></span><span class="arrow">' + (accepting ? '▲' : '▼') + '</span></button>' +
+      '<div class="frame" id="ansFrameWrap">' + mlist + '<div style="position:relative"><div class="ld">回答フォームを読み込んでいます…</div><iframe id="ansFrame" title="出欠回答" ' + (accepting ? 'src="' + esc(ansUrlOf(target)) + '"' : 'data-src="' + esc(ansUrlOf(target)) + '"') + '></iframe></div></div>' +
+      (accepting ? '' : (acc.length && !curAcc ? '<div class="ansnote">表示中の会議（締切後）への変更はそのまま反映されます。受付中の会議に回答するときは上の一覧から選んでください。</div>' : '<div class="ansnote">当日の急な変更もここから送れます（受付は自動で更新されます）。</div>')) +
+      '</section>';
+  }
+  if(accepting) h += ansSec;
+
+  // 出欠
+  h += '<section id="s-status" class="dots"><div class="h"><div class="jp">出 欠</div><div class="en">ATTENDANCE</div></div>' +
+       '<div class="stats">' +
+       '<div class="stat ok"><b>' + c.comes + '</b><span>出席予定</span>' + (obsN ? '<em class="plus">オブザーバー +' + obsN + '名</em>' : '') + '</div>' +
+       '<div class="stat"><b>' + c.zoom + '</b><span>ZOOM</span></div>' +
+       '<div class="stat absent"><b>' + c.absent + '</b><span>欠席</span></div>' +
+       '<div class="stat pending"><b>' + c.pending + '</b><span>未定</span></div>' +
+       '<div class="stat noreply"><b>' + c.noreply + '</b><span>未回答</span></div>' +
+       (hasParty ? '<div class="stat"><b>' + c.partyComes + '</b><span>懇親会</span>' + (obsP ? '<em class="plus">オブザーバー +' + obsP + '名</em>' : '') + '</div>' : '') +
+       '</div>' +
+       '<div class="legend"><span><i style="background:var(--ok)"></i>出席済</span><span><i style="background:var(--absent)"></i>欠席</span>' +
+       '<span><i style="background:var(--pending)"></i>未定</span><span><i style="background:var(--noreply)"></i>未回答</span></div>';
+
+  var gnames = []; d.people.forEach(function(p){ var g = groupOf(p); if(gnames.indexOf(g) < 0) gnames.push(g); });
+  var groups = gnames.map(function(g, i){ return [('0' + (i+1)).slice(-2), g, d.people.filter(function(p){ return groupOf(p) === g; })]; });
+  groups.forEach(function(g){
+    if(!g[2].length) return;
+    h += '<div class="grp"><span class="n">' + g[0] + '</span><span class="t">' + g[1] + '</span><span class="c">' + g[2].length + '名</span></div>';
+    g[2].forEach(function(p){
+      h += '<div class="row ' + rowClass(p) + '"' + (p.chg ? ' title="' + esc(p.chg.when) + ' に回答を変更（' + esc([p.chg.attend ? '会議 ' + p.chg.attend : '', p.chg.party ? '懇親会 ' + p.chg.party : ''].filter(Boolean).join('／')) + '）"' : '') + '>' +
+           '<div class="who"><b>' + esc(p.name) + '</b><small>' + esc(subOf(p)) +
+             (p.proxy ? '　代理：' + esc(p.proxy) : '') + (p.checkedIn ? '　<span class="in-mark">✔ 出席済</span>' : '') + '</small>' +
+             (p.note ? '<small class="memo">💬 ' + esc(p.note) + '</small>' : '') + '</div>' +
+           '<div class="col"><em>会議</em>' + ring(tag(p.attend), p.chg && p.chg.attend) + '</div>' +
+           (hasParty ? '<div class="col"><em>懇親会</em>' + ring(partyTag(p.party), p.chg && p.chg.party) + '</div>' : '<div></div>') +
+           '</div>';
+    });
+  });
+  // オブザーバー（別枠）
+  if(d.observers && d.observers.length){
+    h += '<div class="grp"><span class="n">' + ('0' + (groups.length+1)).slice(-2) + '</span><span class="t">オブザーバー</span><span class="c">' + d.observers.length + '名</span></div>';
+    d.observers.forEach(function(o){
+      h += '<div class="row obs' + (o.checkedIn ? ' in' : '') + '">' +
+           '<div class="who"><b>' + esc(o.name) + '</b><small>' + (o.role ? esc(o.role) + '　／　' : '') + '同行：' + esc(o.host) + (o.checkedIn ? '　<span class="in-mark">✔ 出席済</span>' : '') + '</small></div>' +
+           '<div class="col"><em>会議</em><span class="tag attend">出席</span></div>' +
+           (hasParty ? '<div class="col"><em>懇親会</em>' + (o.party ? '<span class="tag attend">出席</span>' : '<span class="tag absent">欠席</span>') + '</div>' : '<div></div>') +
+           '</div>';
+    });
+  }
+  h += '<div class="updated">' + esc(d.updated) + ' 時点</div></section>';
+
+  // 会場
+  // 日付は「10/22（木）」のように短く大きく、年は小さく添える
+  var dm = String(m.date || '').match(/(\d{4})年(\d{1,2})月(\d{1,2})日\s*\(?([日月火水木金土])?\)?/);
+  var dateBig = dm ? (dm[2] + '/' + dm[3] + (dm[4] ? '<small>（' + dm[4] + '）</small>' : '') + '<small style="color:var(--muted);font-weight:700">' + dm[1] + '年</small>') : esc(m.date);
+  h += '<section id="s-venue" class="dots"><div class="h"><div class="jp">会 場</div><div class="en">VENUE</div></div>' +
+       '<div class="vhero"><div class="when"><span class="date">' + dateBig + '</span>' + (m.time ? '<span class="time">' + esc(m.time) + '<small>開始</small></span>' : '') + '</div>' +
+       (m.gather ? '<div class="gather">🕒 <b>' + esc(m.gather.time) + ' 集合</b>' + (m.gather.why ? '　' + esc(m.gather.why) : '') + '</div>' : '') +
+       '<div class="where"><span class="pin">会場</span><b>' + (m.place ? esc(m.place) : '<span style="color:var(--muted);font-weight:500">追ってご案内</span>') + '</b></div></div>' +
+       (m.topics && m.topics.length ? '<div class="topics"><div class="tl">議題</div><ol>' + m.topics.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>' : '') +
+       '<dl class="kv">' +
+       (m.dress ? '<dt>服装</dt><dd class="plain">' + esc(m.dress) + '</dd>' : '') +
+       (m.online ? '<dt>オンライン</dt><dd><a class="online" href="' + esc(m.online) + '" target="_blank" rel="noopener">Zoomで参加する</a></dd>' : '') +
+       (m.agenda ? '<dt>アジェンダ</dt><dd><a class="online agenda" href="' + esc(m.agenda) + '" target="_blank" rel="noopener">アジェンダを見る</a></dd>' : '') +
+       (ORG.cal ? '<dt>カレンダー</dt><dd><a class="online agenda" href="' + esc(ORG.cal + encodeURIComponent(id)) + '" target="_blank" rel="noopener">カレンダーに登録する</a><div style="font-size:11px;color:var(--muted);margin-top:4px">任意。Google／iPhone のカレンダーに予定を入れる</div></dd>' : '') +
+       (m.feeMeeting > 0 ? '<dt>会議費</dt><dd><span class="fee">' + yen(m.feeMeeting) + '<small>当日集金</small></span></dd>' : '') +
+       (m.note ? '<dt>備考</dt><dd>' + esc(m.note).replace(/\n/g, '<br>') + '</dd>' : '') +
+       '</dl></section>';
+
+  // 懇親会
+  h += '<section id="s-party" class="dots"><div class="h"><div class="jp">懇親会</div><div class="en">RECEPTION</div></div>';
+  if(hasParty){
+    h += '<div class="phero"><div class="pin">会場</div>' +
+           '<div class="nm">' + (m.partyPlace ? esc(m.partyPlace) : '<span style="color:var(--muted);font-weight:500;font-size:16px">追ってご案内</span>') + '</div>' +
+           (m.partyVenue && (m.partyVenue.address || m.partyVenue.tel) ? '<div class="ad">' + (m.partyVenue.address ? esc(m.partyVenue.address) : '') + (m.partyVenue.address && m.partyVenue.tel ? '<br>' : '') + (m.partyVenue.tel ? 'TEL ' + esc(m.partyVenue.tel) : '') + '</div>' : '') +
+           (m.partyVenue ? '<div class="btns"><a class="online" href="' + esc(m.partyVenue.map) + '" target="_blank" rel="noopener">Googleマップで開く</a>' + (m.partyVenue.url ? '<a class="online agenda" href="' + esc(m.partyVenue.url) + '" target="_blank" rel="noopener">お店のサイト</a>' : '') + '</div>' : '') +
+         '</div>' +
+         '<div class="pstats">' +
+           (m.partyFee > 0 ? '<div class="pstat"><div class="l">会費</div><div class="v fee">' + yen(m.partyFee) + '</div><div class="s">当日集金</div></div>' : '<div class="pstat"><div class="l">会費</div><div class="v" style="font-size:20px;padding-top:6px">なし</div></div>') +
+           '<div class="pstat"><div class="l">出席予定</div><div class="v">' + (c.partyComes + obsP) + '<span style="font-family:var(--sans);font-size:14px;font-weight:900;margin-left:3px">名</span></div>' + (obsP ? '<div class="s">うちオブザーバー ' + obsP + '名</div>' : '<div class="s">回答ベース</div>') + '</div>' +
+         '</div>' +
+         (m.cancel ? '<div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">懇親会のキャンセルは <b style="color:var(--ink)">' + esc(m.cancel.text) + '</b> までにお願いします。それ以降はお店の都合により懇親会費' + (m.cancel.full ? '' : '（' + yen(m.cancel.amount) + '）') + 'をご負担いただく場合があります。</div>' : '');
+  } else {
+    h += '<div class="empty">今回は懇親会はありません。</div>';
+  }
+  h += '</section>';
+
+  // 今後の予定（懇親会の下）：押すとその会議に切り替わる
+  var today = new Date(); today.setHours(0,0,0,0);
+  var ups = LIST.filter(function(x){ return x.date && new Date(x.date + 'T00:00:00') >= today; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var schedGrouped = !!PROJECT || (PROJECTS.length && ups.some(function(x){ return pjOf(x); }));
+  var schedRow = function(x){ var dm = x.date.split('-'); var dt = new Date(x.date + 'T00:00:00'); return '<div class="row' + (x.id === id ? ' cur' : '') + '" data-go="' + esc(x.id) + '"><div class="d"><b>' + (+dm[1]) + '/' + (+dm[2]) + '</b><small>' + '日月火水木金土'[dt.getDay()] + '</small></div><div class="t"><b>' + esc(x.name) + '</b><small>' + esc(x.type) + (x.project && !schedGrouped ? '　📁 ' + esc(x.project) : '') + (x.time ? '　' + esc(x.time) + '～' : '') + '</small>' + (x.topics && x.topics.length ? '<small class="tp">議題：' + esc(x.topics.slice(0, 3).join('／')) + (x.topics.length > 3 ? ' ほか' + (x.topics.length - 3) + '件' : '') + '</small>' : '') + '</div>' + (x.id === id ? '<span class="tag now">表示中</span>' : x.accepting ? '<span class="tag acc">回答受付中</span>' : '') + '</div>'; };
+  if(ups.length || PROJECT){
+    h += '<section id="s-sched" class="dots"><div class="h"><div class="jp">今後の予定</div><div class="en">SCHEDULE</div></div>';
+    if(PROJECT){
+      // 入口のプロジェクトの予定を先頭に。その下に全体（例会・委員会）を小さく
+      var mine = ups.filter(function(x){ return pjOf(x) === PROJECT; }), rest = ups.filter(function(x){ return pjOf(x) !== PROJECT; });
+      h += '<div class="sgh"><span class="pj">📁 ' + esc(PROJECT) + '</span></div>' + (mine.length ? mine.map(schedRow).join('') : '<div class="empty pj">このプロジェクトの予定はまだありません</div>');
+      if(rest.length) h += '<div class="sgh"><span class="k">全体の予定</span></div>' + rest.map(schedRow).join('');
+    } else if(PROJECTS.length && ups.some(function(x){ return pjOf(x); })){
+      // 全体表示：例会・委員会 → プロジェクトごと に見出しで区切る
+      var plain = ups.filter(function(x){ return !pjOf(x); });
+      h += (plain.length ? plain.map(schedRow).join('') : '');
+      var seen = []; ups.forEach(function(x){ var pj = pjOf(x); if(pj && seen.indexOf(pj) < 0) seen.push(pj); });
+      seen.forEach(function(pj){ h += '<div class="sgh"><span class="pj">📁 ' + esc(pj) + '</span></div>' + ups.filter(function(x){ return pjOf(x) === pj; }).map(schedRow).join(''); });
+    } else h += ups.map(schedRow).join('');
+    h += '</section>';
+  }
+
+  // 日程調整（候補日に○△×）：受付中のものを一覧。押すとその調整のページへ
+  var canMake = String(ORG.poll || '') === 'メンバー';
+  if(POLLS.length || canMake){
+    // 区分（会議／委員会・小委員会／渉外／その他）→ プロジェクト名 でまとめる。会議の予定の列とは別物
+    var groups = [];
+    var POLLV = PROJECT ? POLLS.filter(function(p){ return String(p.project || '').trim() === PROJECT; }) : POLLS;
+    POLLV.forEach(function(p){ var k = p.kind || '会議', pj = p.project || ''; var g = groups.filter(function(x){ return x.kind === k && x.project === pj; })[0]; if(!g){ g = { kind: k, project: pj, items: [] }; groups.push(g); } g.items.push(p); });
+    var korder = ['会議','委員会・小委員会','渉外','その他'];
+    groups.sort(function(a,b){ return (korder.indexOf(a.kind) - korder.indexOf(b.kind)) || a.project.localeCompare(b.project, 'ja'); });
+    h += '<section id="s-poll" class="dots"><div class="h"><div class="jp">日程調整</div><div class="en">SCHEDULING</div></div>' +
+      (POLLV.length ? groups.map(function(g){ return '<div class="pgrp"><div class="pgh"><span class="k">' + esc(g.kind) + '</span>' + (g.project ? '<span class="pj">📁 ' + esc(g.project) + '</span>' : '') + '</div>' +
+        g.items.map(function(p){ var st = !me ? '' : (p.answered || []).indexOf(me) >= 0 ? '<span class="st ok">回答済</span>' : (p.open ? '<span class="st ng">未回答</span>' : ''); var tag = p.state === '確定' ? '<span class="tag now">確定 ' + esc(p.fixed) + '</span>' : p.open ? '<span class="tag acc">受付中</span>' : '<span class="tag">締切</span>'; return '<div class="row" data-poll="' + esc(p.id) + '"><div class="t"><b>' + esc(p.title) + '</b><small>候補 ' + p.n + '件' + (p.first ? '（' + esc(p.first) + (p.n > 1 ? ' 〜 ' + esc(p.last) : '') + '）' : '') + '</small><small>主催 ' + esc(p.owner || '') + (p.deadline ? '　回答締切 ' + esc(fmtJ(p.deadline)) : '') + '</small></div>' + st + tag + '</div>'; }).join('') + '</div>'; }).join('') : '<div class="empty">' + (PROJECT ? 'このプロジェクトの日程調整はいまありません' : 'いま受付中の日程調整はありません') + '</div>') +
+      (canMake ? '<button type="button" class="pollmake" id="pollMake">＋ 日程調整を作る<small>委員会・小委員会・渉外などの日程を決める（名簿の人なら誰でも）</small></button>' : '') +
+      '<div class="pollnote">候補日に ○△× で答えると、人数の多い日がその日程になります</div></section>';
+  }
+
+  if(!accepting) h += ansSec;
+
+  // 管理ページへ（管理者・スタッフ用）：左列の最後／スマホは最下部
+  if(base) h += '<section id="s-admin"><a class="adminbtn" href="' + esc(base + '?admin=1') + '" target="_blank" rel="noopener">⚙ 管理ページを開く<small>管理者・スタッフ専用（ログインが必要です）</small></a></section>';
+
+  // 下タブ（受付中は「回答」を先頭、締切後は末尾）
+  var tabAns = ansSec ? '<a href="#s-answer" data-s="s-answer">' + ICON.list + '回答</a>' : '';
+  h += '<nav class="tabbar">' + (accepting ? tabAns : '') +
+       '<a href="#s-status" class="on" data-s="s-status">' + ICON.list + '出欠</a>' +
+       '<a href="#s-venue" data-s="s-venue">' + ICON.pin + '会場</a>' +
+       '<a href="#s-party" data-s="s-party">' + ICON.cup + '懇親会</a>' +
+       (accepting ? '' : tabAns) +
+       '</nav>';
+
+  var el = document.getElementById('app');
+  el.innerHTML = h;
+  var sel2 = document.getElementById('sel2');
+  if(sel2) sel2.onchange = function(){ load(this.value); };
+  // プロジェクトのチップ：URLを同じページのまま切り替え（再読み込みなし）。入口の予定があればその会議に切り替える
+  Array.prototype.forEach.call(el.querySelectorAll('[data-pj]'), function(b){ b.onclick = function(){
+    var pj = b.dataset.pj || ''; if(pj === PROJECT) return; PROJECT = pj;
+    try { history.replaceState(null, '', projectUrl(pj) + (pj ? '' : '&id=' + encodeURIComponent(id))); } catch(e){}
+    var first = pj ? LIST.filter(function(x){ return pjOf(x) === pj && !x.past; }).sort(function(a,b){ return a.date.localeCompare(b.date); })[0] : null;
+    if(first && first.id !== id){ load(first.id); window.scrollTo(0, 0); } else render(d, id);
+  }; });
+  var pjc = document.getElementById('pjCopy'); if(pjc) pjc.onclick = function(){ copyToClip(projectUrl(PROJECT), pjc, 'この小委員会専用のURLをコピー'); };
+  var cl = document.getElementById('copyLink');
+  if(cl) cl.onclick = function(){ var u = SITE + '?id=' + encodeURIComponent(id); var done = function(){ cl.textContent = 'コピーしました：' + u; setTimeout(function(){ cl.textContent = 'この会議のリンクをコピー'; }, 2500); }; if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(done, function(){ window.prompt('このURLをコピーしてください', u); }); } else { window.prompt('このURLをコピーしてください', u); } };
+  // 回答の開閉（締切後は開いたときに読み込む）
+  // 回答フォームの枠：読み込み完了（または10秒経過）で「読み込んでいます」を消す。高さの連絡が来なければ既定の高さで表示
+  var frEl = document.getElementById('ansFrame'), frWrap = document.getElementById('ansFrameWrap');
+  if(frEl && frWrap){ var ready = function(){ frWrap.classList.add('ready'); }; frEl.addEventListener('load', function(){ setTimeout(ready, 400); }); setTimeout(ready, 10000); }
+  var at = document.getElementById('ansToggle');
+  if(at) at.onclick = function(){ var sec = document.getElementById('s-answer'), fr = document.getElementById('ansFrame'); var open = sec.classList.toggle('open'); sec.classList.toggle('closed', !open); at.querySelector('.arrow').textContent = open ? '▲' : '▼'; if(open && fr && !fr.src && fr.dataset.src) fr.src = fr.dataset.src; };
+  // 回答パネルの会議一覧：押した会議のフォームに切り替え
+  // 別の会議を押したら、フォームだけでなくページ全体をその会議に切り替える（出欠一覧と回答フォームの会議がズレないように）
+  Array.prototype.forEach.call(el.querySelectorAll('#s-answer .mrow'), function(r){ r.onclick = function(){
+    var sec = document.getElementById('s-answer'), fr = document.getElementById('ansFrame');
+    if(r.dataset.ans !== id){
+      if(fr) fr.src = 'about:blank';   // 前の会議のフォームが一瞬残らないように先に消す
+      PANEL_OPEN = true; load(r.dataset.ans); window.scrollTo(0, 0); return;
+    }
+    if(sec && !sec.classList.contains('open')){ sec.classList.add('open'); sec.classList.remove('closed'); var ar = sec.querySelector('.arrow'); if(ar) ar.textContent = '▲'; if(fr && !fr.src && fr.dataset.src) fr.src = fr.dataset.src; }
+  }; });
+  if(PANEL_OPEN){ PANEL_OPEN = false; var sec0 = document.getElementById('s-answer'); if(sec0 && !sec0.classList.contains('open')){ sec0.classList.add('open'); sec0.classList.remove('closed'); var ar0 = sec0.querySelector('.arrow'); if(ar0) ar0.textContent = '▲'; if(frEl && !frEl.src && frEl.dataset.src) frEl.src = frEl.dataset.src; } }
+  // 締切後（閉じた状態）でも、少し遅らせて裏で読み込んでおく（開いたときに待たせない）
+  setTimeout(function(){ var fr = document.getElementById('ansFrame'); if(fr && !fr.src && fr.dataset.src) fr.src = fr.dataset.src; }, 2500);
+  var mc = document.getElementById('meClear'); if(mc) mc.onclick = function(){ try { localStorage.removeItem('att_me'); } catch(e){} render(d, id); };
+  // 今後の予定 → その会議へ
+  Array.prototype.forEach.call(el.querySelectorAll('#s-sched .row'), function(r){ r.onclick = function(){ if(r.dataset.go !== id){ load(r.dataset.go); window.scrollTo(0, 0); } }; });
+  Array.prototype.forEach.call(el.querySelectorAll('#s-poll .row'), function(r){ r.onclick = function(){ loadPoll(r.dataset.poll); }; });
+  var pm = document.getElementById('pollMake'); if(pm) pm.onclick = function(){ renderPollForm(null); };
+  var tabs = el.querySelectorAll('.tabbar a');
+  Array.prototype.forEach.call(tabs, function(a){
+    a.onclick = function(){ Array.prototype.forEach.call(tabs, function(x){ x.classList.toggle('on', x === a); }); };
+  });
+  // スクロール位置で下タブをハイライト
+  var secs = ['s-answer','s-status','s-venue','s-party'].map(function(i){ return document.getElementById(i); }).filter(Boolean);
+  window.onscroll = function(){
+    var y = window.scrollY + 120, cur = 's-status';
+    secs.forEach(function(s){ if(s && s.offsetTop <= y) cur = s.id; });
+    Array.prototype.forEach.call(tabs, function(x){ x.classList.toggle('on', x.dataset.s === cur); });
+  };
+}
+
+/* ---------- 日程調整ページ：候補日に ○△×、集計 ---------- */
+var POLL = null, PA = {}, PN = {};   // PA＝いま付けている ○△×（候補key → 記号）、PN＝候補ごとの備考（例：遅参）
+function loadPoll(id){
+  document.getElementById('app').innerHTML = '<div class="msg load">日程調整を読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div>';
+  google.script.run.withSuccessHandler(renderPoll).withFailureHandler(function(e){ document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>'; }).pollData(id);
+}
+function renderPoll(d){
+  POLL = d;
+  var app = document.getElementById('app'); app.classList.add('pollview');
+  var me = ''; try { me = localStorage.getItem('att_me') || ''; } catch(e){}
+  if(me && !d.targets.some(function(t){ return t.name === me; })) me = '';
+  var mine = me && d.answers[me] ? d.answers[me] : null;
+  PA = mine ? JSON.parse(JSON.stringify(mine.answers)) : {}; PN = mine && mine.notes ? JSON.parse(JSON.stringify(mine.notes)) : {};
+  var canAnswer = d.state !== '確定' && d.state !== '取消';
+  var s = d.summary;
+  var h = '';
+  h += '<div class="hero"><div class="en">' + esc(ORG.en || '') + '<br><b>SCHEDULING</b></div><div class="org">' + esc(ORG.name || '') + '</div>' +
+       '<div class="ttl">' + esc(d.title) + '</div>' +
+       '<div class="meta"><span class="ktag">' + esc(d.kind || '会議') + '</span>' + (d.project ? '<span class="ktag pj">📁 ' + esc(d.project) + '</span>' : '') + '　主催：' + esc(d.owner || '') + '<br>候補 ' + d.cands.length + '件' + (d.deadline ? '　／　回答締切 ' + esc(fmtJ(d.deadline)) : '') + (d.type ? '　／　対象：' + esc(d.type) : '') + '</div>' +
+       (d.note ? '<div class="note">' + esc(d.note).replace(/\n/g, '<br>') + '</div>' : '') +
+       (d.state === '確定' ? '<div class="pfixed">この日に決まりました：<b>' + esc(d.fixedLabel) + '</b></div>' : (d.fixedList && d.fixedList.length) ? '<div class="pfixed">採用予定：<b>' + esc(d.fixedLabel) + '</b>（まだ確定前。答え直しできます）</div>' : d.state === '取消' ? '<div class="pfixed off">この日程調整は取り消されました</div>' : !d.open ? '<div class="pfixed off">回答は締め切られています（確定までは答え直せます）</div>' : '') +
+       '</div><div class="rule"></div>';
+  // 回答
+  if(canAnswer){
+    var groups = [], last = '';
+    d.targets.forEach(function(t){ var g = ORG.kind === 'ブロック' ? (t.kubun || '') : (t.yaku || ''); if(g !== last){ last = g; groups.push({ g: g, items: [] }); } groups[groups.length - 1].items.push(t); });
+    h += '<section id="s-pans"><div class="h"><div class="jp">回答する</div><div class="en">YOUR ANSWER</div></div>' +
+      '<div class="pf"><label>お名前</label><select id="pName"><option value="">選んでください</option>' + groups.map(function(g){ return '<optgroup label="' + esc(g.g || '名簿') + '">' + g.items.map(function(t){ return '<option value="' + esc(t.name) + '"' + (t.name === me ? ' selected' : '') + '>' + esc(t.name) + (ORG.kind === 'ブロック' && t.kubun !== 'ブロック役員' && t.lom ? '（' + esc(t.lom) + '）' : t.yaku ? '（' + esc(t.yaku) + '）' : '') + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>' +
+      '<div class="pmine" id="pMine">' + (mine ? '前回の回答（' + esc(mine.when) + '）が入っています。変えて送信すると上書きされます' : me ? 'まだ回答がありません' : '') + '</div></div>' +
+      '<div class="pcands" id="pCands">' + d.cands.map(function(c){ return pollCandRow(c); }).join('') + '</div>' +
+      '<div class="pquick"><button type="button" class="pq" data-all="○">すべて ○</button><button type="button" class="pq" data-all="△">すべて △</button><button type="button" class="pq" data-all="×">すべて ×</button></div>' +
+      '<div class="pf"><label>コメント（任意）</label><input id="pComment" value="' + esc(mine ? mine.comment : '') + '" placeholder="例：19時以降なら可"></div>' +
+      '<button type="button" class="psend" id="pSend">送信する</button><div class="perr" id="pErr"></div>' +
+      '</section>';
+  }
+  // 集計
+  h += '<section id="s-psum"><div class="h"><div class="jp">集 計</div><div class="en">RESULTS</div><span class="c">' + s.answered + '/' + s.total + ' 名 回答</span></div>' +
+    (s.ranked.length ? s.ranked.map(function(r, i){ var pct = s.total ? Math.round(r.o.length / s.total * 100) : 0, pd = s.total ? Math.round(r.d.length / s.total * 100) : 0; var isFixed = (d.fixedList || []).indexOf(r.key) >= 0; return '<div class="pr' + (isFixed ? ' fixed' : i === 0 && r.o.length ? ' top' : '') + '" data-i="' + r.idx + '"><div class="prh"><b>' + esc(r.label) + '</b>' + (isFixed ? '<span class="tag now">' + (d.state === '確定' ? '確定' : '採用') + '</span>' : i === 0 && r.o.length ? '<span class="tag acc">最有力</span>' : '') + '<span class="prn"><em class="o">○' + r.o.length + '</em><em class="d">△' + r.d.length + '</em><em class="x">×' + r.x.length + '</em></span></div><div class="pbar"><span class="o" style="width:' + pct + '%"></span><span class="d" style="width:' + pd + '%"></span></div><div class="prw">' + (r.x.length ? '<span><em>×</em>' + r.x.map(function(n){ return nm(n, r); }).join('、') + '</span>' : '') + (r.d.length ? '<span><em>△</em>' + r.d.map(function(n){ return nm(n, r); }).join('、') + '</span>' : '') + (r.o.some(function(n){ return r.notes && r.notes[n]; }) ? '<span><em>○</em>' + r.o.filter(function(n){ return r.notes[n]; }).map(function(n){ return nm(n, r); }).join('、') + '</span>' : '') + (r.none.length ? '<span class="muted"><em>未回答</em>' + r.none.length + '名</span>' : '') + '</div></div>'; }).join('') : '<div class="empty">候補がありません</div>') +
+    (s.comments.length ? '<div class="pcm"><b>コメント</b>' + s.comments.map(function(c){ return '<div>' + esc(c.name) + '：' + esc(c.comment) + '</div>'; }).join('') + '</div>' : '') +
+    '<div class="updated">○が多い順。同数なら△が多い順</div></section>';
+  // 主催者だけの操作（設定「日程調整」＝メンバー のとき）：編集・締切／再開・確定・取消
+  var isOwner = d.memberEdit && me && me === d.owner;
+  if(isOwner){
+    h += '<section id="s-pown"><div class="h"><div class="jp">主催者の操作</div><div class="en">ORGANIZER</div></div><div class="pownnote">あなた（' + esc(me) + '）が作った日程調整です。</div><div class="pownbtns">' +
+      (d.state !== '確定' && d.state !== '取消' ? '<button type="button" data-own="edit">内容を編集</button>' : '') +
+      (d.state === '受付中' ? '<button type="button" data-own="締切">締め切る</button>' : '') +
+      (d.state === '締切' || d.state === '確定' ? '<button type="button" data-own="受付中">受付中に戻す</button>' : '') +
+      (d.state !== '確定' && d.state !== '取消' ? '<button type="button" data-own="fix" class="pri">日を選ぶ（採用）</button>' : '') +
+      (d.state !== '確定' && d.state !== '取消' && d.fixedList && d.fixedList.length ? '<button type="button" data-own="確定" class="pri">採用した日で確定する（' + d.fixedList.length + '日）</button>' : '') +
+      (d.state !== '取消' ? '<button type="button" data-own="取消" class="dng">取り消す</button>' : '') + '</div>' +
+      '<div id="pownFix" class="pownfix"></div></section>';
+  }
+  // 戻る・管理
+  var base = String(ORG.cal || '').split('?')[0];
+  h += '<section id="s-pfoot">' + (LIST.length ? '<button type="button" class="pback" id="pBack">← 出欠状況・今後の予定へ</button>' : '') +
+       (base ? '<button type="button" class="copylink" id="pCopy">この日程調整のリンクをコピー</button>' : '') + '</section>';
+  app.innerHTML = h;
+  window.scrollTo(0, 0);
+  bindPollCands();
+  Array.prototype.forEach.call(app.querySelectorAll('.pq'), function(b){ b.onclick = function(){ Array.prototype.forEach.call(app.querySelectorAll('.pc'), function(pc){ var m = b.dataset.all; PA[pc.dataset.key] = m; Array.prototype.forEach.call(pc.querySelectorAll('.pm'), function(x){ x.classList.toggle('on', x.dataset.m === m); }); }); }; });
+  // 名前を変えたら、その人の前回の回答に入れ替える（前の人の ○△× が残らないように）
+  var pn = document.getElementById('pName'); if(pn) pn.onchange = function(){
+    var a = d.answers[pn.value];
+    PA = a ? JSON.parse(JSON.stringify(a.answers)) : {}; PN = a && a.notes ? JSON.parse(JSON.stringify(a.notes)) : {};
+    document.getElementById('pCands').innerHTML = d.cands.map(function(c){ return pollCandRow(c); }).join(''); bindPollCands();
+    document.getElementById('pComment').value = a ? a.comment : '';
+    document.getElementById('pMine').textContent = a ? '前回の回答（' + a.when + '）が入っています。変えて送信すると上書きされます' : pn.value ? 'まだ回答がありません' : '';
+  };
+  var send = document.getElementById('pSend'); if(send) send.onclick = function(){
+    var name = document.getElementById('pName').value, err = document.getElementById('pErr');
+    var missing = d.cands.filter(function(c){ return !PA[c.key]; });
+    if(!name){ err.textContent = 'お名前を選んでください'; return; }
+    if(missing.length){ err.textContent = 'まだ付けていない候補があります：' + missing.map(function(c){ return c.label; }).join('、'); return; }
+    err.textContent = ''; send.disabled = true; send.textContent = '送信中…';
+    google.script.run.withSuccessHandler(function(r){ try { localStorage.setItem('att_me', name); } catch(e){} renderPoll(r); var t = document.createElement('div'); t.className = 'ptoast'; t.textContent = '送信しました。ありがとうございます'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2500); })
+      .withFailureHandler(function(e){ send.disabled = false; send.textContent = '送信する'; err.textContent = e.message; }).pollSubmit(d.id, name, PA, document.getElementById('pComment').value, PN);
+  };
+  Array.prototype.forEach.call(app.querySelectorAll('[data-own]'), function(b){ b.onclick = function(){
+    var act = b.dataset.own;
+    if(act === 'edit') return renderPollForm(d);
+    if(act === 'fix'){
+      var box = document.getElementById('pownFix');
+      box.innerHTML = '<div class="pownnote">採用する日を押してください（何日でも可。押すたびに切り替わります）。選び終わったら上の「採用した日で確定する」</div>' + s.ranked.map(function(r){ var on = (d.fixedList || []).indexOf(r.key) >= 0; return '<button type="button" data-fix="' + esc(r.key) + '" data-on="' + (on ? '1' : '0') + '"' + (on ? ' class="on"' : '') + '>' + (on ? '✓ ' : '') + esc(r.label) + '　<em>○' + r.o.length + ' △' + r.d.length + ' ×' + r.x.length + '</em></button>'; }).join('');
+      Array.prototype.forEach.call(box.querySelectorAll('[data-fix]'), function(f){ f.onclick = function(){ f.disabled = true; google.script.run.withSuccessHandler(function(r){ renderPoll(r); var b2 = document.querySelector('[data-own="fix"]'); if(b2) b2.click(); }).withFailureHandler(function(e){ f.disabled = false; alert(e.message); }).pollAdoptBy(d.id, me, f.dataset.fix, f.dataset.on !== '1'); }; });
+      return;
+    }
+    var msg = act === '取消' ? 'この日程調整を取り消しますか？（一覧から消えます）' : act === '締切' ? '受付を締め切りますか？（確定までは答え直せます）' : act === '確定' ? '採用した日（' + (d.fixedLabel || '') + '）で確定しますか？確定すると答え直しはできなくなります' : '受付中に戻しますか？';
+    if(!window.confirm(msg)) return;
+    b.disabled = true;
+    google.script.run.withSuccessHandler(function(r){ if(act === '取消'){ var cur = LIST.filter(function(m){ return m.current; })[0] || LIST[0]; if(cur) load(CUR_ID || cur.id); else renderPoll(r); } else renderPoll(r); }).withFailureHandler(function(e){ b.disabled = false; alert(e.message); }).pollSetStateBy(d.id, me, act, '');
+  }; });
+  var bk = document.getElementById('pBack'); if(bk) bk.onclick = function(){ var cur = LIST.filter(function(m){ return m.current; })[0] || LIST[0]; load(CUR_ID || cur.id); };
+  var cp = document.getElementById('pCopy'); if(cp) cp.onclick = function(){ var u = SITE + '?poll=' + encodeURIComponent(d.id); var done = function(){ cp.textContent = 'コピーしました'; setTimeout(function(){ cp.textContent = 'この日程調整のリンクをコピー'; }, 2500); }; if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(done, function(){ window.prompt('このURLをコピーしてください', u); }); } else { window.prompt('このURLをコピーしてください', u); } };
+}
+
+/* 候補日の1行：日付＋備考欄（例：遅参）＋○△× */
+function pollCandRow(c){
+  var v = PA[c.key] || '', n = PN[c.key] || '';
+  return '<div class="pc" data-key="' + esc(c.key) + '"><div class="pcl"><b>' + esc(c.label.split(' ')[0]) + '</b>' + (c.time ? '<small>' + esc(c.time) + '～</small>' : '') + '<input class="pcn" value="' + esc(n) + '" placeholder="備考（例：遅参、20時まで）" maxlength="60"></div><div class="pcb">' + ['○','△','×'].map(function(m){ return '<button type="button" class="pm' + (v === m ? ' on' : '') + ' m' + (m === '○' ? 'o' : m === '△' ? 'd' : 'x') + '" data-m="' + m + '">' + m + '</button>'; }).join('') + '</div></div>';
+}
+function bindPollCands(){
+  var box = document.getElementById('pCands'); if(!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll('.pc .pm'), function(b){ b.onclick = function(){ var pc = b.closest('.pc'), key = pc.dataset.key; PA[key] = b.dataset.m; Array.prototype.forEach.call(pc.querySelectorAll('.pm'), function(x){ x.classList.toggle('on', x === b); }); }; });
+  Array.prototype.forEach.call(box.querySelectorAll('.pc .pcn'), function(i){ i.oninput = function(){ var key = i.closest('.pc').dataset.key; if(i.value.trim()) PN[key] = i.value.trim(); else delete PN[key]; }; });
+}
+/* 集計の名前（備考があれば括弧で） */
+function nm(n, r){ return esc(n) + (r.notes && r.notes[n] ? '<i>（' + esc(r.notes[n]) + '）</i>' : ''); }
+
+/* 日程調整を作る・直す（メンバー用：名簿の名前を選んで主催者になる） */
+var PF_CANDS = [];
+function renderPollForm(p){
+  var app = document.getElementById('app'); app.classList.add('pollview');
+  var me = ''; try { me = localStorage.getItem('att_me') || ''; } catch(e){}
+  var people = (POLL && POLL.targets && POLL.targets.length && p) ? POLL.targets : null;
+  // 名簿は回答ページのデータ（people）を使う。無ければサーバーから
+  if(!PF_PEOPLE){ app.innerHTML = '<div class="msg load">名簿を読み込んでいます…</div>'; google.script.run.withSuccessHandler(function(r){ PF_PEOPLE = r.people || []; PF_TYPES = (r.meetings || []).map(function(m){ return m.type; }).filter(function(v,i,a){ return v && a.indexOf(v) === i; }); renderPollForm(p); }).withFailureHandler(function(e){ app.innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>'; }).answerData(); return; }
+  p = p || {};
+  PF_CANDS = (p.cands && p.cands.length) ? p.cands.map(function(c){ return { date: c.date, time: c.time }; }) : [{date:'',time:''},{date:'',time:''},{date:'',time:''}];
+  var kinds = ['会議','委員会・小委員会','渉外','その他'];
+  var groups = [], last = '';
+  PF_PEOPLE.forEach(function(t){ var g = ORG.kind === 'ブロック' ? (t.kubun || '') : (t.yaku || ''); if(g !== last){ last = g; groups.push({ g: g, items: [] }); } groups[groups.length - 1].items.push(t); });
+  var h = '<div class="hero"><div class="en">' + esc(ORG.en || '') + '<br><b>SCHEDULING</b></div><div class="org">' + esc(ORG.name || '') + '</div><div class="ttl">' + (p.id ? '日程調整を編集' : '日程調整を作る') + '</div><div class="meta">候補日を出して、みんなに ○△× で答えてもらいます。作った人が主催者になり、締切・確定ができます</div></div><div class="rule"></div>' +
+    '<section id="s-pform">' +
+    '<div class="pf"><label>あなたのお名前（主催者）</label>' + (p.id ? '<div class="pfro">' + esc(p.owner) + '</div>' : '<select id="pfName"><option value="">選んでください</option>' + groups.map(function(g){ return '<optgroup label="' + esc(g.g || '名簿') + '">' + g.items.map(function(t){ return '<option value="' + esc(t.name) + '"' + (t.name === me ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>') + '</div>' +
+    '<div class="pf"><label>タイトル</label><input id="pfTitle" value="' + esc(p.title || '') + '" placeholder="例：○○小委員会 打合せ／11月の例会準備"></div>' +
+    '<div class="pf"><label>区分</label><div class="pfseg" id="pfKind">' + kinds.map(function(k){ return '<button type="button" class="' + ((p.kind || '委員会・小委員会') === k ? 'on' : '') + '" data-k="' + esc(k) + '">' + esc(k) + '</button>'; }).join('') + '</div><div class="pfhint">会議（役員会・会員会議所会議）の日程は管理者が会議として登録します。委員会・小委員会・渉外はこの中で完結</div></div>' +
+    '<div class="pf"><label>プロジェクト名（任意）</label><input id="pfProject" list="pfProjList" value="' + esc(p.project || '') + '" placeholder="例：地区大会準備／○○小委員会"><datalist id="pfProjList">' + POLLS.map(function(x){ return x.project; }).filter(function(v,i,a){ return v && a.indexOf(v) === i; }).map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist><div class="pfhint">同じ名前を付けると一覧でまとまります</div></div>' +
+    '<div class="pf"><label>答えてもらう人</label><select id="pfType"><option value="">名簿の全員</option>' + (PF_TYPES || []).map(function(t){ return '<option' + (p.type === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="pf"><label>候補日時</label><div id="pfCands"></div><div class="pfadd"><button type="button" id="pfAdd">＋ 候補を追加</button><button type="button" id="pfWeek">＋ 1週間後</button><button type="button" id="pfNext">＋ 翌日</button></div><div class="pfhint">時刻は空欄でもOK</div></div>' +
+    '<div class="pf"><label>回答締切（任意）</label><input id="pfDeadline" type="date" value="' + esc(p.deadline || '') + '"></div>' +
+    '<div class="pf"><label>備考（任意）</label><input id="pfNote" value="' + esc(p.note || '') + '" placeholder="例：場所は事務局の予定"></div>' +
+    '<button type="button" class="psend" id="pfSend">' + (p.id ? '保存する' : 'この内容で作る') + '</button><div class="perr" id="pfErr"></div>' +
+    '</section><section id="s-pfoot"><button type="button" class="pback" id="pfBack">← ' + (p.id ? 'やめて戻る' : '出欠状況・今後の予定へ') + '</button></section>';
+  app.innerHTML = h; window.scrollTo(0, 0);
+  var drawCands = function(){
+    var box = document.getElementById('pfCands');
+    box.innerHTML = PF_CANDS.map(function(c, i){ return '<div class="pfc"><input type="date" value="' + esc(c.date) + '" data-i="' + i + '" data-f="date"><input type="time" value="' + esc(c.time) + '" data-i="' + i + '" data-f="time"><button type="button" data-rm="' + i + '">×</button></div>'; }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('input'), function(inp){ inp.onchange = function(){ PF_CANDS[+inp.dataset.i][inp.dataset.f] = inp.value; }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'), function(b){ b.onclick = function(){ if(PF_CANDS.length > 1) PF_CANDS.splice(+b.dataset.rm, 1); else PF_CANDS[0] = {date:'',time:''}; drawCands(); }; });
+  };
+  drawCands();
+  var lastC = function(){ for(var i = PF_CANDS.length - 1; i >= 0; i--) if(PF_CANDS[i].date) return PF_CANDS[i]; return null; };
+  var addFrom = function(days){ var l = lastC(); var d = '', t = l ? l.time : ''; if(l){ var x = new Date(l.date + 'T00:00:00'); x.setDate(x.getDate() + days); d = x.getFullYear() + '-' + ('0' + (x.getMonth()+1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2); } var empty = PF_CANDS.filter(function(c){ return !c.date; })[0]; if(empty){ empty.date = d; if(t) empty.time = t; } else PF_CANDS.push({ date: d, time: t }); drawCands(); };
+  document.getElementById('pfAdd').onclick = function(){ var l = lastC(); PF_CANDS.push({ date: '', time: l ? l.time : '' }); drawCands(); };
+  document.getElementById('pfWeek').onclick = function(){ addFrom(7); };
+  document.getElementById('pfNext').onclick = function(){ addFrom(1); };
+  var kindBox = document.getElementById('pfKind');
+  Array.prototype.forEach.call(kindBox.querySelectorAll('button'), function(b){ b.onclick = function(){ Array.prototype.forEach.call(kindBox.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); }); }; });
+  document.getElementById('pfBack').onclick = function(){ if(p.id) renderPoll(POLL); else { var cur = LIST.filter(function(m){ return m.current; })[0] || LIST[0]; if(cur) load(CUR_ID || cur.id); } };
+  document.getElementById('pfSend').onclick = function(){
+    var err = document.getElementById('pfErr'), btn = this;
+    var name = p.id ? p.owner : document.getElementById('pfName').value;
+    var cands = PF_CANDS.filter(function(c){ return c.date; }).map(function(c){ return c.date + (c.time ? ' ' + c.time : ''); });
+    if(!name){ err.textContent = 'お名前を選んでください'; return; }
+    if(!document.getElementById('pfTitle').value.trim()){ err.textContent = 'タイトルを入れてください'; return; }
+    if(!cands.length){ err.textContent = '候補日を1つ以上入れてください'; return; }
+    err.textContent = ''; btn.disabled = true; btn.textContent = '送信中…';
+    var o = { id: p.id || '', title: document.getElementById('pfTitle').value, kind: (kindBox.querySelector('button.on') || {}).dataset.k || '委員会・小委員会', project: document.getElementById('pfProject').value, type: document.getElementById('pfType').value, deadline: document.getElementById('pfDeadline').value, note: document.getElementById('pfNote').value, cands: cands };
+    google.script.run.withSuccessHandler(function(r){ try { localStorage.setItem('att_me', name); } catch(e){} google.script.run.withSuccessHandler(function(list){ POLLS = list; renderPoll(r); }).withFailureHandler(function(){ renderPoll(r); }).pollList(); })
+      .withFailureHandler(function(e){ btn.disabled = false; btn.textContent = p.id ? '保存する' : 'この内容で作る'; err.textContent = e.message; }).pollCreate(o, name);
+  };
+}
+var PF_PEOPLE = null, PF_TYPES = null;
+
+}
+</script>
+</body>
+</html>
