@@ -35,6 +35,12 @@
   .hero .org{font-size:11px;font-weight:700;margin-top:10px;color:#333}
   .hero .ttl{font-size:20px;font-weight:900;margin-top:2px}
   .hero .meta{font-size:13px;color:#333;margin-top:4px}
+  .hero .facts{margin-top:12px;border-top:1px solid #e3e8ef}
+  .hero .fr{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #e3e8ef;align-items:baseline}
+  .hero .fk{flex:0 0 88px;font-size:12.5px;font-weight:700;color:#5b6675}
+  .hero .fv{flex:1;font-size:15px;color:#1b2430;line-height:1.5;min-width:0}
+  .hero .fv b{font-weight:800}.hero .fv .big{font-size:17px}.hero .fv .acc{color:#b45309;font-size:16px}.hero .fv .red{color:#c62828}
+  .hero .fv small{display:block;font-size:12.5px;color:#5b6675;margin-top:2px}
   .hero .lead{margin-top:14px;font-size:14px;font-weight:700;color:#1b2430;line-height:1.6}
   .hero .lead small{display:block;margin-top:4px;font-size:12px;font-weight:400;color:#5b6675}
   .hero .note{margin-top:10px;padding:10px 14px;background:#fff8e1;border-left:4px solid #f9ab00;font-size:13px;line-height:1.6;color:#333}
@@ -222,9 +228,16 @@ function render(){
   h += '<div class="hero"><div class="en">' + esc(ORG.en || '') + '<br><b>RSVP</b></div>' +
        '<div class="org">' + esc(ORG.name || '') + '</div>' +
        '<div class="ttl">' + esc(m.label) + '</div>' +
-       '<div class="meta">' + esc(m.date) + '　' + esc(m.time) + '～' + (m.gather ? '<b style="color:#b45309">（' + esc(m.gather.time) + ' ' + esc(m.gather.label || '集合') + (m.gather.why ? '：' + esc(m.gather.why) : '') + '）</b>' : '') + '　' + esc(m.place) + (m.deadline ? '　／　回答締切 ' + esc(m.deadline) : '') + (m.dress ? '<br>服装：<b>' + esc(m.dress) + '</b>' : '') + '</div>' +
+       // 日時・受付・会場などは1行ずつ、見出しを付けて並べる（ひと目で分かるように）
+       '<div class="facts">' +
+         '<div class="fr"><span class="fk">日時</span><span class="fv"><b class="big">' + esc(m.date) + '</b> <b class="big">' + esc(m.time) + '～</b></span></div>' +
+         (m.gather ? '<div class="fr"><span class="fk">' + esc(m.gather.word || '集合') + '</span><span class="fv"><b class="acc">' + esc(m.gather.time) + '　' + esc(m.gather.label || '集合') + '</b>' + (m.gather.why ? '<small>' + esc(m.gather.why) + '</small>' : '') + '</span></div>' : '') +
+         '<div class="fr"><span class="fk">会場</span><span class="fv">' + (m.place ? '<b>' + esc(m.place) + '</b>' : '追ってご案内') + '</span></div>' +
+         (hasParty ? '<div class="fr"><span class="fk">' + esc(m.partyName || '懇親会') + '</span><span class="fv"><b>' + esc(m.partyTime || '会議終了後') + '</b>' + (m.partyFee ? '<small>会費 ¥' + Number(m.partyFee).toLocaleString() + '</small>' : '') + '</span></div>' : '') +
+         (m.dress ? '<div class="fr"><span class="fk">服装</span><span class="fv">' + esc(m.dress) + '</span></div>' : '') +
+         (m.deadline ? '<div class="fr"><span class="fk">回答締切</span><span class="fv"><b class="red">' + esc(m.deadline) + '</b></span></div>' : '') +
+       '</div>' +
        (m.note ? '<div class="note">' + esc(m.note).replace(/\n/g, '<br>') + '</div>' : '') +
-       (hasParty && (m.partyTime || (m.partyName && m.partyName !== '懇親会')) ? '<div class="meta">🍺 ' + esc(m.partyName || '懇親会') + (m.partyTime ? '　' + esc(m.partyTime) : '') + '</div>' : '') +
        ((m.docs || []).length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">' + m.docs.map(function(d){ return '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:42px;padding:0 14px;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:900;font-size:14px;text-decoration:none;background:#fff">📄 ' + esc(d.name) + 'を見る</a>'; }).join('') + '</div>' : '') +
        '<div class="lead">上記会議の出欠確認です。下記より出欠のご回答をお願いいたします。<br><small>お名前を選び、出欠・懇親会を選んで「送信」を押してください。回答後の変更も同じ手順で上書きできます。</small></div>' +
        '</div>';
@@ -257,6 +270,8 @@ function render(){
   // 2 氏名
   h += '<div class="step" data-need="name"><div class="h"><span class="n">' + (D.meetings.length > 1 ? '02' : '01') + '</span><span class="t">お名前</span><span class="req">必須</span></div><div class="names">';
   var tg = targets(), last = '';
+  if(S.name && !tg.some(function(p){ return p.name === S.name; })) S.name = '';   // 前に選んだ名前が、この会議の対象でなければ外す
+  if(!tg.length) h += '<div class="whonote" style="color:#9b1c1c;font-weight:700">この会議の対象者が、まだ登録されていません。お手数ですが、事務局にお知らせください。</div>';
   tg.forEach(function(p){
     var g = groupOf(p);
     if(g !== last){ last = g; h += '<div class="g">' + g + '</div>'; }
