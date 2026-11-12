@@ -1053,11 +1053,28 @@ function viewTypes(){
     '<div class="types" id="types"><div class="row hdr"><span>種別名</span><span>議決</span><span>会則条文（名簿の見出しに表示）</span><span>カウント区分</span><span></span></div>';
   D.types.forEach(function(t, i){ h += typeRow(t, i); });
   h += '</div>' + (D.isAdmin ? '<button class="btn s" id="addT" style="margin-top:10px">＋ 種別を追加</button>' : '') + '<datalist id="groupList"><option value="会議"><option value="例会"><option value="委員会"><option value="渉外"><option value="なし"></datalist></div>';
+  // 対象者のコピー（新しい種別を、ほかの種別と同じ人にする）
+  if(D.isAdmin && D.types.length > 1){
+    var cnt = function(nm){ return (D.members || []).filter(function(p){ return String(p[nm] || '').trim() !== ''; }).length; };
+    var opt = function(sel){ return D.types.map(function(t, i){ return '<option value="' + esc(t.name) + '"' + (i === sel ? ' selected' : '') + '>' + esc(t.name) + '（対象 ' + cnt(t.name) + '名）</option>'; }).join(''); };
+    var empty = D.types.map(function(t, i){ return cnt(t.name) ? -1 : i; }).filter(function(i){ return i >= 0; });
+    h += '<div class="card" style="padding:18px 20px;margin-top:12px"><h3 style="margin:0 0 4px;font-size:15px">対象者をコピー</h3><p class="muted" style="margin:0 0 10px;font-size:13px">新しい種別の対象者を、ほかの種別と同じ人にします（例：会員会議所会議と同じ人を、議決のない別の種別にも付ける）。コピー先にすでに付いている印は消えません。<b>種別を足した直後は、先に上の「保存」を押してください</b></p>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;align-items:end"><div class="f"><label>コピー元（この種別の対象者を）</label><select id="tcFrom">' + opt(0) + '</select></div><div class="f"><label>コピー先（この種別にも付ける）</label><select id="tcTo">' + opt(empty.length ? empty[empty.length - 1] : D.types.length - 1) + '</select></div><button class="btn p" id="tcGo" style="min-height:40px">対象者をコピー</button></div></div>';
+  }
   return h;
 }
 function typeRow(t, i){
   var ro = D.isAdmin ? '' : ' readonly disabled';
   return '<div class="row" data-i="' + i + '"><input class="tn" value="' + esc(t.name) + '" placeholder="例：例会"' + ro + '><select class="tv"' + ro + '><option value="0"' + (!t.vote?' selected':'') + '>議決 なし</option><option value="1"' + (t.vote?' selected':'') + '>議決 あり</option></select><input class="tr" value="' + esc(t.rule) + '" placeholder="会則条文（例：会則第14条2項）"' + ro + '><input class="tg" list="groupList" value="' + esc(t.group||'') + '" placeholder="カウント区分（空＝種別名）"' + ro + '>' + (D.isAdmin ? '<button class="btn s d" data-rm-t="' + i + '" title="削除">×</button>' : '<span></span>') + '</div>';
+}
+function copyTypeTargets(){
+  var f = document.getElementById('tcFrom').value, t = document.getElementById('tcTo').value;
+  if(f === t) return toast('コピー元とコピー先が同じです');
+  confirmBox('対象者をコピーしますか？', '「' + f + '」で対象になっている人に、「' + t + '」の対象の印を付けます。「' + t + '」にすでに付いている印はそのまま残ります。', function(){
+    busy(true);
+    api().withSuccessHandler(function(r){ busy(false); closeModal(true); D.members = r.members; render(); toast(r.added + '名に対象の印を付けました'); })
+      .withFailureHandler(function(e){ busy(false); showErr(e.message); }).adminCopyTypeTargets(TOKEN, f, t);
+  });
 }
 function saveTypes(){
   var rows = Array.prototype.map.call(document.querySelectorAll('#types .row[data-i]'), function(r){ return { name: r.querySelector('.tn').value.trim(), vote: r.querySelector('.tv').value === '1', rule: r.querySelector('.tr').value.trim(), group: r.querySelector('.tg').value.trim() }; }).filter(function(t){ return t.name; });
@@ -2257,7 +2274,7 @@ function bind(){
   var ah = document.getElementById('handoverM'); if(ah) ah.onclick = openHandover;
   bindMemo();
   var b = document.getElementById('addP'); if(b) b.onclick = function(){ openMember(0); };
-  var c = document.getElementById('saveT'); if(c) c.onclick = saveTypes;
+  var c = document.getElementById('saveT'); if(c) c.onclick = saveTypes; var tc = document.getElementById('tcGo'); if(tc) tc.onclick = copyTypeTargets;
   var d = document.getElementById('addT'); if(d) d.onclick = function(){ var box = document.getElementById('types'); var i = box.querySelectorAll('.row[data-i]').length; box.insertAdjacentHTML('beforeend', typeRow({name:'',vote:false,rule:'',group:''}, i)); bind(); };
   Array.prototype.forEach.call(document.querySelectorAll('[data-edit-m]'), function(x){ x.onclick = function(ev){ ev.stopPropagation(); openMeeting(x.dataset.editM); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-review-m]'), function(x){ x.onclick = function(ev){ ev.stopPropagation(); openReview(x.dataset.reviewM); }; });
