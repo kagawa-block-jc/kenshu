@@ -138,6 +138,7 @@ window.google = { script: { run: (function(){
   }
   return { withSuccessHandler: function(f){ return mk().withSuccessHandler(f); }, withFailureHandler: function(f){ return mk().withFailureHandler(f); } };
 })() } };
+var PAGE_VERSION = '2026-11-12-1';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var ORG = {};
 var INIT = null;
 function groupOf(p){ if(ORG.kind === 'ブロック') return p.kubun === 'ブロック役員' ? 'ブロック役員' : '各LOM 理事長・専務'; return String(p.kubun || '').trim() || '委員'; }

@@ -300,6 +300,9 @@
   .seg label{display:inline-flex;align-items:center;padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer;margin:0}
   .seg label.on{background:var(--blue);border-color:var(--blue);color:#fff}
   .seg input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.verBar{background:#fff4e5;border-bottom:1px solid #f0c98a;color:#7a4a00;padding:10px 14px;font-size:13.5px;line-height:1.6;font-weight:600}
+.verOk,.verNg{margin:10px 0 8px;padding:10px 12px;border-radius:10px;font-weight:700;font-size:14px;line-height:1.6}
+.verOk{background:#e9f7ee;color:#17603a;border:1px solid #bfe3cc}.verNg{background:#fdecec;color:#9b1c1c;border:1px solid #f3c2c2}
 </style>
 </head>
 <body>
@@ -335,6 +338,7 @@ window.google = { script: { run: (function(){
 })() } };
 </script>
 <script>
+var PAGE_VERSION = '2026-11-12-1';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var D = null, TAB = 'meetings';
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){t.classList.remove('on')},1800); }
@@ -395,6 +399,7 @@ function boot(d){
 function render(){
   var s = D.settings, u = D.user;
   var h = '';
+  if(D.isAdmin && D.ver !== PAGE_VERSION) h += '<div class="verBar">更新がそろっていません（このページ：' + esc(PAGE_VERSION) + '／動いているコード：' + esc(D.ver || '古い版') + '）。「ページURL」のいちばん下「更新の確認」で、どれが古いか確かめてください。</div>';
   h += '<header><div class="hd"><div class="brand"><div class="l1">' + esc(s['英字見出し'] || s['団体名（短）'] || 'ATTENDANCE').toUpperCase() + '</div><div class="l2">ADMIN</div></div>' +
        '<div class="org">' + esc(s['団体名'] || '') + ((s['年度'] && String(s['団体名']||'').indexOf(s['年度']) < 0) ? '　' + esc(s['年度']) : '') + '　出欠管理 管理ページ</div>' +
        '<div class="me">' + esc(u.name || u.email) + '<b class="' + (D.isAdmin ? '' : 'staff') + '">' + esc(u.master ? 'マスター' : u.role) + '</b> <button class="btn s" id="lgout" style="margin-left:8px">ログアウト</button></div></div>' +
@@ -1106,7 +1111,26 @@ function viewLinks(){
     (D.projectTab ? (D.projects || []) : []).filter(function(p){ return p.state !== '終了'; }).map(function(p){ var pu = vq('project=' + encodeURIComponent(p.name)); return '<tr><td class="name">📁 ' + esc(p.name) + ' <span class="tag g">全体に配ってOK</span><div class="muted" style="font-size:12px;font-weight:400;white-space:normal">この小委員会・事業の専用ページ。いつもの出欠ページが、この予定を上にして開きます' + (p.leader ? '（リーダー：' + esc(p.leader) + '）' : '') + '</div></td><td><input readonly value="' + esc(pu) + '" style="width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:monospace" onclick="this.select()"></td><td style="white-space:nowrap"><a class="btn s" href="' + esc(pu) + '" target="_blank" rel="noopener">開く ↗</a> <button class="btn s" data-copy="' + esc(pu) + '">コピー</button></td></tr>'; }).join('');
   if(D.isAdmin) h += row('当日受付ページ', D.receptionPage || u, false, 'タブレットで開く。出席・集金を記録。<b style="color:var(--ink)">管理ページと同じログイン</b>（管理者かスタッフのメール＋6桁コード。端末ごとに初回だけ、30日保持）。受付担当は前日までにタブレットでログインしておく');
   if(D.isAdmin || D.isStaff) h += row('管理ページ（このページ）', D.adminPage || (u + '?admin=1'), false, 'メール＋コードでログイン。名簿の「権限」がある人だけ入れる');
-  return h + '</tbody></table></div>';
+  h += '</tbody></table></div>';
+  if(D.isAdmin) h += '<div class="card" id="verCard" style="margin-top:14px"><div style="font-weight:700;margin-bottom:4px">更新の確認</div>' +
+    '<div class="muted" style="font-size:12.5px;line-height:1.7">ファイルを貼り替えたあと・デプロイしたあと・GitHub に上げたあとに押すと、全部そろったか分かります。</div>' +
+    '<div style="margin-top:8px"><button type="button" class="btn" onclick="verCheck()">確かめる</button> <span class="muted" style="font-size:12.5px">このページの版：' + esc(PAGE_VERSION) + '</span></div><div id="verOut"></div></div>';
+  return h;
+}
+function verCheck(){
+  var o = document.getElementById('verOut'); if(!o) return;
+  o.innerHTML = '<div class="muted" style="margin-top:8px">確かめています…（10秒ほど）</div>';
+  google.script.run.withSuccessHandler(function(r){
+    var bad = 0, tr = function(place, file, name, ver, err, ok){ if(!ok) bad++;
+      return '<tr><td>' + esc(place) + '</td><td class="name">' + esc(file) + '<div class="muted" style="font-size:12px">' + esc(name) + '</div></td><td>' + esc(ver || err || '—') + '</td><td>' + (ok ? '<span class="tag g">○ 新しい</span>' : '<span class="tag r">✕ 古い</span>') + '</td></tr>'; };
+    var h = tr('Apps Script', 'コード.gs', 'いま動いている版', r.ver, '', r.ver === PAGE_VERSION);
+    (r.rows || []).forEach(function(x){ h += tr(x.place, x.file, x.name, x.ver, x.err, !x.err && x.ver === PAGE_VERSION); });
+    var gh = (r.rows || []).some(function(x){ return x.place === 'GitHub'; });
+    o.innerHTML = '<div class="' + (bad ? 'verNg' : 'verOk') + '">' + (bad ? '✕ が ' + bad + ' 件あります。下の ✕ のファイルだけ直してください。' : '全部そろっています。更新は完了です。') + '</div>' +
+      '<div class="tbl"><table style="width:100%;font-size:13px"><thead><tr><th>場所</th><th>ファイル</th><th>版</th><th>結果</th></tr></thead><tbody>' + h + '</tbody></table></div>' +
+      (bad ? '<div class="muted" style="font-size:12.5px;line-height:1.8;margin-top:6px"><b>Apps Script に ✕</b>：そのファイルを貼り直して保存 →「デプロイを管理 → 鉛筆 → 新バージョン → デプロイ」。<br><b>GitHub に ✕</b>：そのファイルをアップロードし直す（反映まで1〜2分）。<br>直したら、このページを読み込み直して、もう一度「確かめる」。</div>' : '') +
+      (gh ? '' : '<div class="muted" style="font-size:12.5px;margin-top:6px">GitHub のページは、設定に「…URL（外部）」を入れていると一緒に確かめます。</div>');
+  }).withFailureHandler(function(e){ o.innerHTML = '<div class="verNg">確かめられませんでした：' + esc(e.message) + '<br>コード.gs が古いままの可能性があります。コード.gs を貼り直して、新バージョンでデプロイしてください。</div>'; }).adminVersions(TOKEN);
 }
 
 /* ---------- ガイド ---------- */

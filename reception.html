@@ -304,6 +304,7 @@ window.google = { script: { run: (function(){
 })() } };
 </script>
 <script>
+var PAGE_VERSION = '2026-11-12-1';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 // 団体名（見出し用）：前に開いたときのものをすぐ使い、裏で最新を取る
 var ORG = {}; try { ORG = JSON.parse(localStorage.getItem('rec_org:' + location.pathname.replace(/[^\/]*$/, '')) || '{}') || {}; } catch(e){ ORG = {}; }
 var INIT = null;

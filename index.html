@@ -409,6 +409,7 @@ window.google = { script: { run: (function(){
 function fitEn(){ var e = document.querySelector('.hero .en'); if(!e) return; e.style.fontSize = ''; var fs = parseFloat(getComputedStyle(e).fontSize) || 44; var n = 0; while(e.scrollWidth > e.clientWidth + 1 && fs > 22 && n++ < 30){ fs -= 2; e.style.fontSize = fs + 'px'; } }
 try { if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ fitEn(); }); } catch(e){}
 window.addEventListener('resize', function(){ fitEn(); });
+var PAGE_VERSION = '2026-11-12-1';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var ORG = {}, INIT = null;
 // 最初の表示に必要なものを1回で取ってから、ページ本体を動かす。
 // 2回目からは、前に開いたときの内容をすぐ出して（待ち時間なし）、裏で最新を取りに行く。変わっていたら入れ替える
