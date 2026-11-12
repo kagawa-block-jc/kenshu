@@ -260,7 +260,12 @@
   .gnote.ng{background:var(--ng-soft);color:var(--ng);font-weight:700}
   .gnote.plain{background:#f4f6f9;color:var(--sub)}
   mark{background:#fff1a8;padding:0 2px;border-radius:3px}
-  @media (max-width:640px){ .evrow{grid-template-columns:1fr 1fr!important} }   /* 行事の入力欄：スマホは2列 */
+  details.evbox > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border:1.5px dashed var(--line);border-radius:8px;font-size:13px;font-weight:700;color:var(--blue);background:#fafbfd}
+  details.evbox > summary::-webkit-details-marker{display:none}
+  details.evbox[open] > summary{border-style:solid;margin-bottom:4px}
+  details.evbox .evn{background:var(--blue);color:#fff;border-radius:999px;padding:1px 9px;font-size:11.5px}
+  details.evbox .evn0{color:var(--sub);font-weight:400;font-size:12px}
+  @media (max-width:640px){ .evrow{grid-template-columns:1fr 1fr!important} .evrow > div:last-child{grid-column:1/-1} }   /* 行事の入力欄：スマホは2列 */
   details.pghelp{margin:0 0 10px;font-size:12.5px;color:var(--sub)}
   details.pghelp > summary{cursor:pointer;display:inline-flex;align-items:center;min-height:38px;font-weight:700;color:var(--blue);list-style:none}
   details.pghelp > summary::-webkit-details-marker{display:none}
@@ -574,15 +579,17 @@ function meetingForm(m){
     (function(){
       var rows = String(m['行事'] || '').split(/\r?\n/).map(function(l){ return l.split(/[｜|]/).map(function(x){ return x.trim(); }); }).filter(function(a){ return a[0]; });
       var one = function(i){ var a = rows[i] || []; var st = 'padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:14px;min-width:0';
-        return '<div style="display:grid;grid-template-columns:2fr 1.3fr .9fr 1.5fr;gap:6px;margin-top:6px" class="evrow">' +
-          '<input data-ev="n' + i + '" value="' + esc(a[0] || '') + '" placeholder="行事の名前（例：理事長・専務理事昼食会）" style="' + st + '" oninput="evSync()">' +
-          '<input data-ev="t' + i + '" value="' + esc(a[1] || '') + '" placeholder="時間（例：11:30〜12:45）" style="' + st + '" oninput="evSync()">' +
-          '<input data-ev="f' + i + '" value="' + esc(a[2] || '') + '" inputmode="numeric" placeholder="会費（円）" style="' + st + '" oninput="evSync()">' +
-          '<input data-ev="w' + i + '" value="' + esc(a[3] || '') + '" placeholder="対象の役職（例：理事長,専務）" style="' + st + '" oninput="evSync()">' +
-          '</div><div class="hint" data-ev="p' + i + '" style="margin-top:2px"></div>'; };
-      return '<div class="f wide"><label>会議に付く行事（昼食会・分科会など。3つまで・任意）</label>' + one(0) + one(1) + one(2) +
+        var lb = function(t){ return '<span style="display:block;font-size:11.5px;font-weight:700;color:var(--sub);margin-bottom:2px">' + t + '</span>'; };
+        return '<div style="border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#fafbfd"><div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:4px">行事 ' + (i + 1) + '</div>' +
+          '<div>' + lb('行事の名前') + '<input data-ev="n' + i + '" value="' + esc(a[0] || '') + '" placeholder="例：理事長・専務理事昼食会" style="' + st + ';width:100%" oninput="evSync()"></div>' +
+          '<div style="display:grid;grid-template-columns:1.2fr .8fr 1.6fr;gap:8px;margin-top:8px" class="evrow">' +
+          '<div>' + lb('時間') + '<input data-ev="t' + i + '" value="' + esc(a[1] || '') + '" placeholder="例：11:30〜12:45" style="' + st + ';width:100%" oninput="evSync()"></div>' +
+          '<div>' + lb('会費（円）') + '<input data-ev="f' + i + '" value="' + esc(a[2] || '') + '" inputmode="numeric" placeholder="集金しないなら空欄" style="' + st + ';width:100%" oninput="evSync()"></div>' +
+          '<div>' + lb('対象の役職（空欄＝全員）') + '<input data-ev="w' + i + '" value="' + esc(a[3] || '') + '" placeholder="例：理事長,専務理事" style="' + st + ';width:100%" oninput="evSync()"></div>' +
+          '</div><div class="hint" data-ev="p' + i + '" style="margin-top:6px"></div></div>'; };
+      return '<details class="f wide evbox"' + (rows.length ? ' open' : '') + '><summary>＋ 会議に付く行事（昼食会・分科会など）を足す' + '<small class="' + (rows.length ? 'evn' : 'evn0') + '">' + (rows.length ? rows.length + '件あり' : 'ふだんは使いません') + '</small>' + '</summary>' + one(0) + one(1) + one(2) +
         '<textarea id="f_行事" style="display:none">' + esc(m['行事'] || '') + '</textarea>' +
-        '<div class="hint">入れると、回答ページでその行事の出欠（出席／欠席）も一緒に答えてもらえる。「対象の役職」は、役職にその言葉を含む人だけに出す（カンマや「・」で区切る。空欄＝この会議の対象者全員）。<b>「専務」と入れると運営専務も入る</b>ので、下に出る名前を見て、対象の人だけに当たる言葉（例：専務理事）にする。会費を入れると、出席と答えた人の受付シートの「その他費」に入る（集金しないなら空欄）</div></div>';
+        '<div class="hint">入れると、回答ページでその行事の出欠（出席／欠席）も一緒に答えてもらえる。「対象の役職」は、役職がその言葉と同じ人だけに出す（カンマや「・」で区切る。空欄＝この会議の対象者全員）。「会長」は副会長・直前会長には当たらない。下に出る名前で確かめる。会費を入れると、出席と答えた人の受付シートの「その他費」に入る（集金しないなら空欄）</div></details>';
     })() +
     f('懇親会の呼び方（任意）', '懇親会の名称', 'text', {ph:'空欄＝懇親会（例：ランチ懇親会）', hint:'案内文・出欠状況ページ・回答ページの「懇親会」がこの名前になる'}) +
     f('懇親会の時間（任意）', '懇親会の時間', 'text', {ph:'例：12:15〜13:30', hint:'空欄＝案内文は「会議終了後に開催」'}) +
@@ -2316,12 +2323,13 @@ function evSync(){
     if(!n){ if(pv) pv.textContent = ''; continue; }
     if(seen[n]){ if(pv) pv.innerHTML = '<b style="color:var(--ng)">同じ名前の行事があります。名前を変えてください（この行は保存されません）</b>'; continue; }
     seen[n] = true;
-    var words = g('w').split(/[,、，・／\/\s]+/).filter(function(x){ return x && x !== '全員' && x !== 'なし'; });
+    var words = g('w').replace(/[（）()「」『』【】\[\]]/g, ' ').split(/[,、，・／\/\s]+/).filter(function(x){ return x && x !== '全員' && x !== 'なし'; });   // かっこは無視する
     var fm = han(g('f')).replace(/[，,]/g, '').match(/\d+/), fee = fm ? Number(fm[0]) : 0;
     out.push([n, g('t'), fee ? String(fee) : '', words.join(',')].join('｜'));
-    var who = (D.members || []).filter(function(p){ return String(p[ty] || '').trim() !== '' && (!words.length || words.some(function(x){ return String(p['役職'] || '').indexOf(x) >= 0; })); });
+    var hit = function(y, w){ y = String(y || '').trim(); if(/[*＊]/.test(w)){ w = w.replace(/[*＊]/g, ''); return !!w && y.indexOf(w) >= 0; } return y === w || y.split(/[\s　]+/).indexOf(w) >= 0; };   // 役職とぴったり同じ（または空白で区切った一部分と同じ）ときだけ。＊付きは「含む」
+    var who = (D.members || []).filter(function(p){ return String(p[ty] || '').trim() !== '' && (!words.length || words.some(function(x){ return hit(p['役職'], x); })); });
     if(pv) pv.innerHTML = '対象：<b>' + who.length + '名</b>' + (words.length ? '' : '（この会議の対象者全員）') + '　' + (fee ? '会費 <b>¥' + fee.toLocaleString('ja-JP') + '</b>（出席の人の受付に入る）' : '会費なし（集金しない）') +
-      (who.length ? (words.length ? '<div style="margin-top:2px">' + who.map(function(p){ return esc(p['氏名']) + '<span style="color:var(--sub)">（' + esc(p['役職'] || '') + '）</span>'; }).join('、') + '</div>' : '') : '<div style="color:var(--ng);font-weight:700">当てはまる人がいません。役職の言葉を確かめてください</div>');
+      (who.length ? (words.length ? '<div style="margin-top:2px">' + who.map(function(p){ return esc(p['氏名']) + '<span style="color:var(--sub)">（' + esc(p['役職'] || '') + '）</span>'; }).join('、') + '</div>' : '') : '<div style="color:var(--ng);font-weight:700">当てはまる人がいません。名簿の役職と同じ書き方か確かめてください（「含む」にするなら ＊専務 のように ＊ を付ける）</div>');
   }
   var ta = document.getElementById('f_行事'); if(ta) ta.value = out.join('\n');
 }
