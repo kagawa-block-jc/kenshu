@@ -260,6 +260,7 @@
   .gnote.ng{background:var(--ng-soft);color:var(--ng);font-weight:700}
   .gnote.plain{background:#f4f6f9;color:var(--sub)}
   mark{background:#fff1a8;padding:0 2px;border-radius:3px}
+  @media (max-width:640px){ .evrow{grid-template-columns:1fr 1fr!important} }   /* 行事の入力欄：スマホは2列 */
   details.pghelp{margin:0 0 10px;font-size:12.5px;color:var(--sub)}
   details.pghelp > summary{cursor:pointer;display:inline-flex;align-items:center;min-height:38px;font-weight:700;color:var(--blue);list-style:none}
   details.pghelp > summary::-webkit-details-marker{display:none}
@@ -570,6 +571,19 @@ function meetingForm(m){
     (D.projectTab ? '<div class="f"><label>プロジェクト名（任意）</label><input id="f_プロジェクト" list="projListM" value="' + esc(m['プロジェクト']||'') + '" placeholder="例：○○小委員会／地区大会準備"><datalist id="projListM">' + projectNames().map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist><div class="hint">小委員会やプロジェクトの会議に付けると、その小委員会の予定としてまとまり、案内文のURLもその小委員会用になります（登録は「プロジェクト」タブ）</div></div>' : '') +
     '<div class="f"><label>担当者（任意）</label><input id="f_担当者" list="ownerList" value="' + esc(m['担当者']||'') + '" placeholder="空欄＝表示しない"><datalist id="ownerList">' + (D.members||[]).filter(function(p){ return String(p['権限']||'').trim(); }).map(function(p){ return '<option value="' + esc(p['氏名']) + '">' + esc(p['権限']) + '</option>'; }).join('') + '</datalist><div class="hint">この会議の運営を任せる人。入れるとカードに「担当：○○」と出る</div></div>' +
     '<div class="f"><label>懇親会</label><select id="f_懇親会"><option value="">無</option><option value="有"' + (m['懇親会']==='有'?' selected':'') + '>有</option></select></div>' +
+    (function(){
+      var rows = String(m['行事'] || '').split(/\r?\n/).map(function(l){ return l.split(/[｜|]/).map(function(x){ return x.trim(); }); }).filter(function(a){ return a[0]; });
+      var one = function(i){ var a = rows[i] || []; var st = 'padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:14px;min-width:0';
+        return '<div style="display:grid;grid-template-columns:2fr 1.3fr .9fr 1.5fr;gap:6px;margin-top:6px" class="evrow">' +
+          '<input data-ev="n' + i + '" value="' + esc(a[0] || '') + '" placeholder="行事の名前（例：理事長・専務理事昼食会）" style="' + st + '" oninput="evSync()">' +
+          '<input data-ev="t' + i + '" value="' + esc(a[1] || '') + '" placeholder="時間（例：11:30〜12:45）" style="' + st + '" oninput="evSync()">' +
+          '<input data-ev="f' + i + '" value="' + esc(a[2] || '') + '" inputmode="numeric" placeholder="会費（円）" style="' + st + '" oninput="evSync()">' +
+          '<input data-ev="w' + i + '" value="' + esc(a[3] || '') + '" placeholder="対象の役職（例：理事長,専務）" style="' + st + '" oninput="evSync()">' +
+          '</div><div class="hint" data-ev="p' + i + '" style="margin-top:2px"></div>'; };
+      return '<div class="f wide"><label>会議に付く行事（昼食会・分科会など。3つまで・任意）</label>' + one(0) + one(1) + one(2) +
+        '<textarea id="f_行事" style="display:none">' + esc(m['行事'] || '') + '</textarea>' +
+        '<div class="hint">入れると、回答ページでその行事の出欠（出席／欠席）も一緒に答えてもらえる。「対象の役職」は、役職にその言葉を含む人だけに出す（カンマや「・」で区切る。空欄＝この会議の対象者全員）。<b>「専務」と入れると運営専務も入る</b>ので、下に出る名前を見て、対象の人だけに当たる言葉（例：専務理事）にする。会費を入れると、出席と答えた人の受付シートの「その他費」に入る（集金しないなら空欄）</div></div>';
+    })() +
     f('懇親会の呼び方（任意）', '懇親会の名称', 'text', {ph:'空欄＝懇親会（例：ランチ懇親会）', hint:'案内文・出欠状況ページ・回答ページの「懇親会」がこの名前になる'}) +
     f('懇親会の時間（任意）', '懇親会の時間', 'text', {ph:'例：12:15〜13:30', hint:'空欄＝案内文は「会議終了後に開催」'}) +
     '<div class="f wide"><label>懇親会場（店名）</label><div style="display:flex;gap:6px;flex-wrap:wrap"><input id="f_懇親会場" list="venueList" value="' + esc(m['懇親会場']||'') + '" placeholder="店名を入れる（例：高松くるみ 本店）" style="flex:1 1 200px"><button type="button" class="btn" id="f_venuePick" style="white-space:nowrap">候補から選ぶ</button><button type="button" class="btn" id="f_venueDetail" style="white-space:nowrap">店の詳細（URL・住所など）</button></div><datalist id="venueList">' + (D.venues||[]).map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist><div id="venuePickBox" style="display:none;margin-top:6px;border:1.5px solid var(--line);border-radius:8px;max-height:220px;overflow:auto"></div>' +
@@ -585,11 +599,11 @@ function meetingForm(m){
         '</div></div>' +
       '<div class="hint">ここは店名だけでOK。URL・住所・予算は「店の詳細」から（オンラインURL欄ではありません）' + ((D.settings['組織区分']||'ブロック') !== '委員会' ? '。<b style="color:var(--ink)">会員会議所会議の懇親会は、個室か座敷のある店が好ましい</b>（理事長の挨拶・LOMごとの話ができるように）' : '') + '</div></div>' +
     (D.isAdmin ? f('会議費（円）', '会議費', 'number') + f('懇親会費（円）', '懇親会費', 'number') + f('その他費（円）', 'その他費', 'number', {ph:'登録料など。無ければ空欄'}) + f('その他費の名目', 'その他費名目', 'text', {ph:'例：登録料'}) : '') +
-    (D.isAdmin ? (function(){ var cv = String(m['キャンセル料']||'').trim(), mode = cv === '全額' ? '全額' : cv === '未定' ? '未定' : (cv && cv !== '取らない' && /\d/.test(cv)) ? '金額' : '';
+    (D.isAdmin ? (function(){ var cv = String(m['キャンセル料']||'').trim(), mode = cv === '全額' ? '全額' : cv === '未定' ? '未定' : (cv === '取らない' || cv === 'なし') ? '取らない' : (cv && /\d/.test(cv)) ? '金額' : '';
       return '<div class="f wide" id="cancelBox"><label>懇親会のキャンセル料（懇親会ありのときだけ）</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
-        '<select id="f_キャンセル料mode"><option value=""' + (mode==='' ? ' selected' : '') + '>取らない</option><option value="未定"' + (mode==='未定' ? ' selected' : '') + '>未定（会場が決まるまで）</option><option value="全額"' + (mode==='全額' ? ' selected' : '') + '>懇親会費の全額</option><option value="金額"' + (mode==='金額' ? ' selected' : '') + '>金額を指定</option></select>' +
+        '<select id="f_キャンセル料mode"><option value=""' + (mode==='' ? ' selected' : '') + '>選択しない（案内文に書かない）</option><option value="取らない"' + (mode==='取らない' ? ' selected' : '') + '>取らない</option><option value="未定"' + (mode==='未定' ? ' selected' : '') + '>未定（会場が決まるまで）</option><option value="全額"' + (mode==='全額' ? ' selected' : '') + '>懇親会費の全額</option><option value="金額"' + (mode==='金額' ? ' selected' : '') + '>金額を指定</option></select>' +
         '<input id="f_キャンセル料額" type="number" value="' + (mode==='金額' ? esc(cv.replace(/[^0-9]/g,'')) : '') + '" placeholder="金額（円）" style="' + (mode==='金額' ? '' : 'display:none') + '">' +
-        '<input id="f_キャンセル期限" type="datetime-local" value="' + esc(String(m['キャンセル期限']||'').replace(' ', 'T')) + '" style="' + ((mode && mode !== '未定') ? '' : 'display:none') + '">' +
+        '<input id="f_キャンセル期限" type="datetime-local" value="' + esc(String(m['キャンセル期限']||'').replace(' ', 'T')) + '" style="' + ((mode && mode !== '未定' && mode !== '取らない') ? '' : 'display:none') + '">' +
         '</div><div class="hint">期限は空欄＝開催日の前日17:00。設定すると案内文に「キャンセルは○/○ ○時までに」の1行が入り、期限後に欠席へ変えた人は受付シートで「キャンセル料 対象」になります</div></div>'; })() : '') +
     '<div class="f"><label>出席率カウント（この会議だけの個別設定）</label><input id="f_カウント" list="countList" value="' + esc(m['カウント']||'') + '" placeholder="空欄＝種別の設定どおり"><datalist id="countList"><option value="する"><option value="しない">' + D.types.map(function(t){ return t.group||''; }).concat(['会議','例会','委員会','渉外']).filter(function(v,i,a){ return v && v!=='なし' && a.indexOf(v)===i; }).map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist><div class="hint">「しない」＝出欠記録のみ／「する」＝種別の枠でカウント／区分名（例：委員会）＝その枠でカウント</div></div>' +
     f('回答締切', '回答締切', 'date') + fp('服装', '服装', {ph:'例：スマートカジュアル'}) +
@@ -609,7 +623,7 @@ function openMeeting(row, pre){
   if(!EXTRAS){ toast('候補データを読み込み中…'); return loadExtras(function(){ openMeeting(row, pre); }); }
   var m = row ? D.meetings.filter(function(x){ return x._row == row; })[0] : (pre || null);   // pre＝日程調整などからの初期値（新規）
   showModal(meetingForm(m));
-  var cm = document.getElementById('f_キャンセル料mode'); if(cm) cm.onchange = function(){ document.getElementById('f_キャンセル料額').style.display = cm.value === '金額' ? '' : 'none'; document.getElementById('f_キャンセル期限').style.display = (cm.value && cm.value !== '未定') ? '' : 'none'; if(cm.value && document.getElementById('f_懇親会').value !== '有') toast('懇親会を「有」にしてください'); };
+  var cm = document.getElementById('f_キャンセル料mode'); if(cm) cm.onchange = function(){ document.getElementById('f_キャンセル料額').style.display = cm.value === '金額' ? '' : 'none'; document.getElementById('f_キャンセル期限').style.display = (cm.value && cm.value !== '未定' && cm.value !== '取らない') ? '' : 'none'; if(cm.value && cm.value !== '取らない' && document.getElementById('f_懇親会').value !== '有') toast('懇親会を「有」にしてください'); };
   // 資料：ファイルを選ぶ → 団体のドライブに置く → 「名前｜URL」を欄に足す（1つずつ順番に送る）
   var dp = document.getElementById('docPick'), df = document.getElementById('docFile');
   if(dp && df){
@@ -660,14 +674,14 @@ function openMeeting(row, pre){
     Array.prototype.forEach.call(box.querySelectorAll('[data-prm]'), function(x){ x.onclick = function(ev){ ev.stopPropagation(); x.disabled = true; api().withSuccessHandler(function(pr){ D.presets = pr; box.style.display = 'none'; b.onclick(); toast('候補から外しました'); }).withFailureHandler(function(e){ x.disabled = false; toast('エラー：' + e.message); }).adminPresetRemove(TOKEN, key, x.dataset.prm); }; });
   }; });
   document.getElementById('mSave').onclick = function(){
-    var keys = ['会議ID','会議種別','会議名','開催日','開始時刻','場所','プロジェクト','担当者','懇親会','懇親会場','会議費','懇親会費','その他費','その他費名目','カウント','回答締切','受付開始日','服装','オンラインURL','アジェンダURL','資料','議題','備考','運営メモ','集合時刻','集合の理由','集合の表記','懇親会の名称','懇親会の時間','終了時刻','懇親会開始（実際）','ふりかえり'];
+    var keys = ['会議ID','会議種別','会議名','開催日','開始時刻','場所','プロジェクト','担当者','懇親会','懇親会場','会議費','懇親会費','その他費','その他費名目','カウント','回答締切','受付開始日','服装','オンラインURL','アジェンダURL','資料','議題','備考','運営メモ','集合時刻','集合の理由','集合の表記','行事','懇親会の名称','懇親会の時間','終了時刻','懇親会開始（実際）','ふりかえり'];
     var data = { _row: m ? m._row : 0, _memoOrig: m ? String(m['運営メモ'] || '') : '' };   // 開いたときの運営メモ（他の人がその間に足した分を消さないため）
     keys.forEach(function(k){ var el = document.getElementById('f_' + k); if(el) data[k] = el.value; });
     var cm = document.getElementById('f_キャンセル料mode');
-    if(cm){ var cmode = cm.value; data['キャンセル料'] = cmode === '全額' ? '全額' : cmode === '未定' ? '未定' : cmode === '金額' ? String(document.getElementById('f_キャンセル料額').value || '').trim() : '';
-      data['キャンセル期限'] = (cmode && cmode !== '未定') ? String(document.getElementById('f_キャンセル期限').value || '').replace('T', ' ') : '';
+    if(cm){ var cmode = cm.value; data['キャンセル料'] = cmode === '全額' ? '全額' : cmode === '未定' ? '未定' : cmode === '取らない' ? '取らない' : cmode === '金額' ? String(document.getElementById('f_キャンセル料額').value || '').trim() : '';
+      data['キャンセル期限'] = (cmode && cmode !== '未定' && cmode !== '取らない') ? String(document.getElementById('f_キャンセル期限').value || '').replace('T', ' ') : '';
       if(cmode === '金額' && !(Number(data['キャンセル料']) > 0)) return showErr('キャンセル料の金額を入れてください（取らない場合は「取らない」を選ぶ）');
-      if(cmode && document.getElementById('f_懇親会').value !== '有') return showErr('キャンセル料は懇親会「有」のときだけ設定できます'); }
+      if(cmode && cmode !== '取らない' && document.getElementById('f_懇親会').value !== '有') return showErr('キャンセル料は懇親会「有」のときだけ設定できます'); }
     // 新しいURLは「使い回す／この会議だけ」を選んでもらう
     data._reuse = {};
     var need = [];
@@ -2267,13 +2281,32 @@ function bind(){
 }
 var MODAL_SNAP = '';
 function modalSnap(){ var m = document.getElementById('modal'); return Array.prototype.map.call(m.querySelectorAll('input,textarea,select'), function(el){ return el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value; }).join('\u0001'); }
-function showModal(html){ var m = document.getElementById('modal'); m.innerHTML = html; document.getElementById('mask').classList.add('on'); MODAL_SNAP = modalSnap(); var c1 = document.getElementById('mClose'), c2 = document.getElementById('mCancel'); if(c1) c1.onclick = function(){ closeModal(); }; if(c2) c2.onclick = function(){ closeModal(); }; }
+function showModal(html){ var m = document.getElementById('modal'); m.innerHTML = html; if(m.querySelector('[data-ev]')) setTimeout(function(){ evSync(); var ty = document.getElementById('f_会議種別'); if(ty) ty.addEventListener('change', evSync); }, 0); document.getElementById('mask').classList.add('on'); MODAL_SNAP = modalSnap(); var c1 = document.getElementById('mClose'), c2 = document.getElementById('mCancel'); if(c1) c1.onclick = function(){ closeModal(); }; if(c2) c2.onclick = function(){ closeModal(); }; }
 /* 入力途中で閉じようとしたら確認。保存後など確実に閉じたいときは closeModal(true) */
 function closeModal(force){
   if(!force && document.getElementById('mask').classList.contains('on') && modalSnap() !== MODAL_SNAP){
     if(!window.confirm('入力した内容は保存されていません。閉じてもよいですか？')) return;
   }
   document.getElementById('mask').classList.remove('on'); MODAL_SNAP = '';
+}
+/* 会議の編集：行事の入力欄（3行）を「名前｜時間｜会費｜対象」の形にまとめ、対象になる人を下に出す */
+function evSync(){
+  var out = [], ty = (document.getElementById('f_会議種別') || {}).value || '', seen = {};
+  var han = function(t){ return String(t || '').replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }); };
+  for(var i = 0; i < 3; i++){
+    var g = function(k){ var e = document.querySelector('[data-ev="' + k + i + '"]'); return e ? String(e.value || '').replace(/[｜|\n]/g, ' ').trim() : ''; };
+    var n = g('n').replace(/[／=＝]/g, '・'), pv = document.querySelector('[data-ev="p' + i + '"]');   // 「／」「=」は出欠の記録の区切りと重なるので「・」にする
+    if(!n){ if(pv) pv.textContent = ''; continue; }
+    if(seen[n]){ if(pv) pv.innerHTML = '<b style="color:var(--ng)">同じ名前の行事があります。名前を変えてください（この行は保存されません）</b>'; continue; }
+    seen[n] = true;
+    var words = g('w').split(/[,、，・／\/\s]+/).filter(function(x){ return x && x !== '全員' && x !== 'なし'; });
+    var fm = han(g('f')).replace(/[，,]/g, '').match(/\d+/), fee = fm ? Number(fm[0]) : 0;
+    out.push([n, g('t'), fee ? String(fee) : '', words.join(',')].join('｜'));
+    var who = (D.members || []).filter(function(p){ return String(p[ty] || '').trim() !== '' && (!words.length || words.some(function(x){ return String(p['役職'] || '').indexOf(x) >= 0; })); });
+    if(pv) pv.innerHTML = '対象：<b>' + who.length + '名</b>' + (words.length ? '' : '（この会議の対象者全員）') + '　' + (fee ? '会費 <b>¥' + fee.toLocaleString('ja-JP') + '</b>（出席の人の受付に入る）' : '会費なし（集金しない）') +
+      (who.length ? (words.length ? '<div style="margin-top:2px">' + who.map(function(p){ return esc(p['氏名']) + '<span style="color:var(--sub)">（' + esc(p['役職'] || '') + '）</span>'; }).join('、') + '</div>' : '') : '<div style="color:var(--ng);font-weight:700">当てはまる人がいません。役職の言葉を確かめてください</div>');
+  }
+  var ta = document.getElementById('f_行事'); if(ta) ta.value = out.join('\n');
 }
 function showErr(m){ var e = document.getElementById('mErr'); if(e){ e.textContent = m; e.classList.add('on'); try { e.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(x){} toast('保存できませんでした：' + m); } else toast('エラー：' + m); }
 function busy(on){ Array.prototype.forEach.call(document.querySelectorAll('#modal .btn'), function(b){ b.disabled = !!on; }); }

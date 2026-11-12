@@ -333,7 +333,7 @@
   /* ---------- パソコン（幅900px以上）：2カラムのダッシュボード ---------- */
   @media(min-width:900px){
     body{padding-bottom:0;background:#f4f6f9}
-    #app{display:grid;grid-template-columns:400px minmax(0,1fr);grid-template-areas:"answer answer" "hero status" "sel status" "venue status" "party status" "sched status" "poll status" "late status" "admin status" ". status";grid-template-rows:auto auto auto auto auto auto auto auto auto 1fr;
+    #app{display:grid;grid-template-columns:400px minmax(0,1fr);grid-template-areas:"answer answer" "hero status" "sel status" "venue status" "events status" "party status" "sched status" "poll status" "late status" "admin status" ". status";grid-template-rows:auto auto auto auto auto auto auto auto auto auto 1fr;
          align-content:start;column-gap:0;min-height:100vh;max-width:1400px;margin:0 auto;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.06)}
     .hero{grid-area:hero;padding:36px 32px 24px;border-right:1px solid var(--line)}
     .hero .en{font-size:54px}
@@ -344,6 +344,7 @@
     .pjbar{padding:0 32px 6px;border-right:1px solid var(--line)} .pjband{margin:0 32px 10px}
     .selbar:after{right:46px}
     #s-venue{grid-area:venue;border-right:1px solid var(--line);padding:26px 32px 8px}
+    #s-events{grid-area:events;border-right:1px solid var(--line);padding:26px 32px 32px}
     #s-party{grid-area:party;border-right:1px solid var(--line);padding:26px 32px 32px}
     #s-status{grid-area:status;padding:36px 40px 40px}
     #s-answer{grid-area:answer;padding:24px 40px 0;border-bottom:1px solid var(--line)}
@@ -530,7 +531,7 @@ function backToAnswer(show){
     if(m.classList.contains('on')) return close();
     // いま画面にある場所だけ並べる（会議によって懇親会や日程調整がないことがある）
     // 行き先：ページ内の場所（[id, 名前, ひとこと, 回答パネルを開くか]）と、外に開くリンク（アジェンダ・ZOOM。その会議に入っているときだけ）
-    var items = [['s-answer', '出欠を回答する', 'はじめての回答。名前を選んで送信', true], ['s-answer', '出欠を変更する', 'もう一度送信すると上書きされます', true], ['s-status', 'みんなの出欠を見る', '', false], ['s-venue', '日時・会場を見る', '', false], ['s-party', '懇親会を見る', '', false], ['s-sched', '今後の予定を見る', '', false], ['s-docs', 'これまでの資料を見る', '終わった会議のアジェンダ・議事録など', false], ['s-poll', '日程調整を見る', '', false]]
+    var items = [['s-answer', '出欠を回答する', 'はじめての回答。名前を選んで送信', true], ['s-answer', '出欠を変更する', 'もう一度送信すると上書きされます', true], ['s-status', 'みんなの出欠を見る', '', false], ['s-venue', '日時・会場を見る', '', false], ['s-events', '行事（昼食会など）の出欠を見る', '', false], ['s-party', '懇親会を見る', '', false], ['s-sched', '今後の予定を見る', '', false], ['s-docs', 'これまでの資料を見る', '終わった会議のアジェンダ・議事録など', false], ['s-poll', '日程調整を見る', '', false]]
       .filter(function(x){ return document.getElementById(x[0]); });
     var ag = document.querySelector('#s-venue a.ag'), zm = document.querySelector('#s-venue a.online:not(.agenda)'), dcs = document.querySelectorAll('#s-venue a.doc');
     var links = []; if(ag) links.push(['アジェンダを見る', '会議の資料が別のページで開きます', ag.href]); Array.prototype.forEach.call(dcs, function(d){ links.push(['資料：' + d.textContent, '別のページで開きます', d.href]); }); if(zm) links.push(['ZOOMで参加する', 'オンライン参加の方はこちら', zm.href]);
@@ -741,6 +742,15 @@ function render(d, id){
        (m.note ? '<dt>備考</dt><dd>' + esc(m.note).replace(/\n/g, '<br>') + '</dd>' : '') +
        '</dl></section>';
 
+  // 会議に付く行事（昼食会など）：対象の人の出欠を、行事ごとにまとめて出す
+  if((m.events || []).length){
+    h += '<section id="s-events" class="dots"><div class="h"><div class="jp">行 事</div><div class="en">EVENTS</div></div>' + m.events.map(function(e){
+      var line = function(label, list, color){ if(!list.length) return ''; var hd = '<b style="color:' + color + '">' + label + ' ' + list.length + '名</b>', nm = list.map(function(n){ return '<span style="white-space:nowrap">' + esc(n) + '</span>'; }).join('、');
+        return list.length > 8 ? '<details style="margin-top:6px;font-size:13.5px;line-height:1.7"><summary style="cursor:pointer;min-height:32px;display:flex;align-items:center;gap:6px">' + hd + '<span style="color:var(--blue);font-weight:700;font-size:12.5px">名前を見る</span></summary>' + nm + '</details>' : '<div style="margin-top:6px;font-size:13.5px;line-height:1.7">' + hd + '　' + nm + '</div>'; };
+      return '<div style="border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff"><div style="font-weight:900;font-size:16px">' + esc(e.name) + '</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-top:2px">' + [e.time ? '🕒 ' + esc(e.time) : '', e.target ? '対象：' + esc(e.target) : '', e.fee > 0 ? '会費 ¥' + Number(e.fee).toLocaleString('ja-JP') : ''].filter(Boolean).join('　') + '</div>' +
+        line('出席', e.yes, '#188038') + line('欠席', e.no, '#c5221f') + line('未回答', e.none, '#b7791f') + '</div>'; }).join('') + '</section>';
+  }
   // 懇親会
   h += '<section id="s-party" class="dots"><div class="h"><div class="jp">' + esc(m.partyName || '懇親会') + '</div><div class="en">RECEPTION</div></div>' + (hasParty && m.partyTime ? '<div style="margin:-4px 0 10px;font-weight:900;font-size:16px">🕒 ' + esc(m.partyTime) + '</div>' : '');
   if(hasParty){

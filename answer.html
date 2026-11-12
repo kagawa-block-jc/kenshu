@@ -43,7 +43,9 @@
   .step .h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
   .step .h .n{font-family:var(--display);font-size:22px;color:var(--blue)}
   .step .h .t{font-size:15px;font-weight:900}
-  .step .h .req{font-size:11px;font-weight:700;color:#fff;background:var(--absent);padding:1px 6px;border-radius:3px;margin-left:auto}
+  .step.miss{outline:3px solid #c5221f;outline-offset:-3px;background:#fff5f5;scroll-margin-top:8px}
+  .step .h .t{min-width:0}
+  .step .h .req{white-space:nowrap;flex:none;font-size:11px;font-weight:700;color:#fff;background:var(--absent);padding:1px 6px;border-radius:3px;margin-left:auto}
   .step .h .opt{font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:auto}
   .mlist{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
   .mlist .mrow{display:flex;width:100%;gap:12px;align-items:center;padding:11px 14px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;cursor:pointer}
@@ -178,6 +180,7 @@ google.script.run.withSuccessHandler(function(d){
   try { localStorage.setItem(__AK, JSON.stringify({ at: Date.now(), org: ORG, d: d })); } catch(e){}
   if(!__aStart){ bootAnswer(d); return; }
   // 最新に入れ替える。選びかけの内容（名前・出欠）は消さない
+  var __evWas = ''; try { __evWas = JSON.stringify(((meeting() || {}).events || []).map(function(e){ return [e.name, e.who]; })); } catch(e){}
   if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
   if(ONLY && INITIAL && d.meetings.some(function(m){ return m.id === INITIAL; })) d.meetings = d.meetings.filter(function(m){ return m.id === INITIAL; });   // ?only=1：この会議だけを出す（案内文の「この会議だけの回答ページ」）
   D = d;
@@ -185,7 +188,9 @@ google.script.run.withSuccessHandler(function(d){
   if(!d.meetings.some(function(m){ return m.id === S.meetingId; })){ S.meetingId = d.meetings[0].id; prefill(); render();   // 選んでいた会議がなくなった：選びかけの出欠を別の会議に持ち越さない
     var nt = document.createElement('div'); nt.style.cssText = 'margin:10px 16px;padding:10px 14px;border-radius:10px;background:#fff4e5;border:1.5px solid #f5c98a;font-size:13.5px;line-height:1.6'; nt.textContent = '先ほどの会議は受付が終わったため、次の会議に切り替えました。会議名を確かめてから回答してください'; var ap = document.getElementById('app'); if(ap && ap.firstChild) ap.insertBefore(nt, ap.children[1] || null); return; }
   if(S.name && !d.people.some(function(p){ return p.name === S.name; })){ S.name = ''; render(); return; }
-  if(!__aTouched){ if(S.name) prefill(); render(); }   // 触っている最中は画面を動かさない（次に押したときに最新の内容で描き直される）
+  var evNow = JSON.stringify(((meeting() || {}).events || []).map(function(e){ return [e.name, e.who]; }));
+  if(!__aTouched){ if(S.name) prefill(); render(); }
+  else if(evNow !== __evWas){ var keep = S.evs || {}; S.evs = {}; myEvents().forEach(function(x){ if(keep[x.e.name]) S.evs[x.e.name] = keep[x.e.name]; }); render(); }   // 行事が増減・変更された：名前の合うものだけ残して描き直す   // 触っている最中は画面を動かさない（次に押したときに最新の内容で描き直される）
 }).withFailureHandler(function(e){
   if(__aStart) return;   // 前の内容で表示できている。送信はそのまま使える
   document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '<br><button type="button" onclick="location.reload()" style="margin-top:12px;padding:10px 18px;border-radius:8px;border:1.5px solid #0a5aa8;background:#fff;color:#0a5aa8;font:inherit;font-weight:900;cursor:pointer">もう一度読み込む</button></div>';
@@ -197,13 +202,18 @@ function existing(){ return (D.answers[S.meetingId] || {})[S.name]; }
 
 // 名前を選んだとき・会議を切り替えたとき：前の回答があれば、その内容を入れておく（変えるところだけ直して送れる。備考やオブザーバーが消えない）
 function prefill(){
-  var ex = existing(); S.attend = ''; S.party = ''; S.note = ''; S.obs = 'なし'; S.obsNames = ''; S.obsParty = ''; S.proxyName = ''; S.proxyYaku = ''; S.mandate = ''; S._pre = false;
+  var ex = existing(); S.attend = ''; S.party = ''; S.note = ''; S.obs = 'なし'; S.obsNames = ''; S.obsParty = ''; S.proxyName = ''; S.proxyYaku = ''; S.mandate = ''; S._pre = false; S.evs = {};
   if(!ex || !S.name) return;
   S.attend = ex.attend || ''; S.party = ex.party || ''; S.note = ex.note || '';
+  var pv = {}; String(ex.ev || '').split('／').forEach(function(x){ var k = x.lastIndexOf('='); if(k > 0) pv[x.slice(0, k)] = x.slice(k + 1); });
+  myEvents().forEach(function(x){ if(pv[x.e.name]) S.evs[x.e.name] = pv[x.e.name]; });
   if(ex.obs === 'あり'){ S.obs = 'あり'; S.obsNames = ex.obsNames || ''; S.obsParty = ex.obsParty || ''; }
   if(ex.attend === '代理出席'){ S.proxyName = ex.proxy || ''; S.mandate = ex.mandate || ''; }
   S._pre = true;
 }
+
+// 自分が対象の行事（名前を選ぶ前は出さない）。i は会議の行事の何番目か
+function myEvents(){ var m = meeting(); return ((m && m.events) || []).map(function(e, i){ return { e: e, i: i }; }).filter(function(x){ return S.name && (x.e.who || []).indexOf(S.name) >= 0; }); }
 
 function render(){
   var m = meeting(), hasParty = m.party === '有';
@@ -213,6 +223,8 @@ function render(){
        '<div class="ttl">' + esc(m.label) + '</div>' +
        '<div class="meta">' + esc(m.date) + '　' + esc(m.time) + '～' + (m.gather ? '<b style="color:#b45309">（' + esc(m.gather.time) + ' ' + esc(m.gather.label || '集合') + (m.gather.why ? '：' + esc(m.gather.why) : '') + '）</b>' : '') + '　' + esc(m.place) + (m.deadline ? '　／　回答締切 ' + esc(m.deadline) : '') + (m.dress ? '<br>服装：<b>' + esc(m.dress) + '</b>' : '') + '</div>' +
        (m.note ? '<div class="note">' + esc(m.note).replace(/\n/g, '<br>') + '</div>' : '') +
+       (hasParty && (m.partyTime || (m.partyName && m.partyName !== '懇親会')) ? '<div class="meta">🍺 ' + esc(m.partyName || '懇親会') + (m.partyTime ? '　' + esc(m.partyTime) : '') + '</div>' : '') +
+       ((m.docs || []).length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">' + m.docs.map(function(d){ return '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:42px;padding:0 14px;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:900;font-size:14px;text-decoration:none;background:#fff">📄 ' + esc(d.name) + 'を見る</a>'; }).join('') + '</div>' : '') +
        '<div class="lead">上記会議の出欠確認です。下記より出欠のご回答をお願いいたします。<br><small>お名前を選び、出欠・懇親会を選んで「送信」を押してください。回答後の変更も同じ手順で上書きできます。</small></div>' +
        '</div>';
 
@@ -242,7 +254,7 @@ function render(){
        ((m.docs || []).length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + m.docs.map(function(d){ return '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:900;font-size:13.5px;text-decoration:none;background:#fff">📄 ' + esc(d.name) + 'を見る</a>'; }).join('') + '</div>' : '') +
        '<br><button type="button" class="dl" id="goDetail">会議の詳細（会場・懇親会・服装など）を見る ↓</button></div>';
   // 2 氏名
-  h += '<div class="step"><div class="h"><span class="n">' + (D.meetings.length > 1 ? '02' : '01') + '</span><span class="t">お名前</span><span class="req">必須</span></div><div class="names">';
+  h += '<div class="step" data-need="name"><div class="h"><span class="n">' + (D.meetings.length > 1 ? '02' : '01') + '</span><span class="t">お名前</span><span class="req">必須</span></div><div class="names">';
   var tg = targets(), last = '';
   tg.forEach(function(p){
     var g = groupOf(p);
@@ -253,12 +265,22 @@ function render(){
   });
   h += '</div>';
   var ex = existing();
-  if(S.name) h += '<div class="current">' + (ex ? '現在の回答：<b>' + esc(ex.attend) + '</b>' + (hasParty && ex.party ? '　懇親会：<b>' + esc(ex.party) + '</b>' : '') + '（' + esc(ex.when) + '）<br>' + (S._pre ? '前回の内容を入れてあります。変えるところだけ直して送信してください' : '※送信すると上書きされます') : 'まだ回答がありません') + '</div>';
+  if(S.name) h += '<div class="current">' + (ex ? '現在の回答：<b>' + esc(ex.attend) + '</b>' + (hasParty && ex.party ? '　' + esc(m.partyName || '懇親会') + '：<b>' + esc(ex.party) + '</b>' : '') + (ex.ev ? '　' + esc(String(ex.ev).replace(/=/g, '：').replace(/／/g, '　')) : '') + '（' + esc(ex.when) + '）<br>' + (S._pre ? '前回の内容を入れてあります。変えるところだけ直して送信してください' : '※送信すると上書きされます') : 'まだ回答がありません') + '</div>';
   h += '</div>';
 
   // 3 会議の出欠
-  var n3 = D.meetings.length > 1 ? '03' : '02';
-  h += '<div class="step"><div class="h"><span class="n">' + n3 + '</span><span class="t">会議の出欠</span><span class="req">必須</span></div><div class="grid">' +
+  // 会議に付く行事（昼食会など）：自分が対象のものだけ、出欠の欄を出す。会議より前の時刻のものは会議の前に、あとのものは会議のあとに並べる
+  var stepNo = D.meetings.length > 1 ? 2 : 1, nn = function(){ stepNo++; return ('0' + stepNo).slice(-2); };
+  var toMin = function(t){ var z = String(t || '').replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }); var k = z.match(/(\d{1,2})\s*[:：時]\s*(\d{2}|半)?/); return k ? (+k[1]) * 60 + (k[2] === '半' ? 30 : (+k[2] || 0)) : null; };
+  var mt0 = toMin(m.time), evs = myEvents();
+  var evStep = function(x){ var e = x.e; return '<div class="step" data-need="ev:' + esc(e.name) + '"><div class="h"><span class="n">' + nn() + '</span><span class="t">' + esc(e.name) + 'の出欠</span><span class="req">必須</span></div>' +
+    '<div class="current" style="margin:0 0 8px">' + [e.time ? '🕒 ' + esc(e.time) : '', e.fee > 0 ? '会費 ¥' + Number(e.fee).toLocaleString('ja-JP') + '（当日集金）' : ''].filter(Boolean).join('　') + '</div>' +
+    '<div class="grid two">' + ['出席', '欠席'].map(function(v){ return '<button type="button" class="opt-btn' + (v === '欠席' ? ' absent' : '') + ((S.evs || {})[e.name] === v ? ' on' : '') + '" data-evn="' + esc(e.name) + '" data-v="' + v + '">' + v + '</button>'; }).join('') + '</div></div>'; };
+  var evBefore = evs.filter(function(x){ var t = toMin(x.e.time); return t !== null && mt0 !== null && t < mt0; }), evAfter = evs.filter(function(x){ return evBefore.indexOf(x) < 0; });
+  var byT = function(a, b){ var x = toMin(a.e.time), y = toMin(b.e.time); return (x === null ? 9999 : x) - (y === null ? 9999 : y); }; evBefore.sort(byT); evAfter.sort(byT);
+  h += evBefore.map(evStep).join('');
+  var n3 = nn();
+  h += '<div class="step" data-need="attend"><div class="h"><span class="n">' + n3 + '</span><span class="t">会議の出欠</span><span class="req">必須</span></div><div class="grid">' +
        btn('attend','出席','') + btn('attend','遅参','') + btn('attend','出席（ZOOM）','zoom','ZOOM') +
        btn('attend','欠席','absent') + btn('attend','未定','pending') + btn('attend','代理出席','', '代理') +
        '</div>' +
@@ -268,16 +290,18 @@ function render(){
          '<label>委任状の提出方法</label><div class="grid">' + btn('mandate','当日持参','') + btn('mandate','事前にメールで送付','', 'メール送付') + btn('mandate','委任状は不要（役員会）','', '不要（役員会）') + '</div>' +
        '</div></div>';
 
+  h += evAfter.map(evStep).join('');
+
   // 4 懇親会
-  var n4 = D.meetings.length > 1 ? '04' : '03';
+  var n4 = hasParty ? nn() : '';
   if(hasParty){
-    h += '<div class="step"><div class="h"><span class="n">' + n4 + '</span><span class="t">' + esc(m.partyName || '懇親会') + 'の出欠</span><span class="req">必須</span></div><div class="grid">' +
+    h += '<div class="step" data-need="party"><div class="h"><span class="n">' + n4 + '</span><span class="t">' + esc(m.partyName || '懇親会') + 'の出欠</span><span class="req">必須</span></div><div class="grid">' +
          btn('party','出席','') + btn('party','遅参','') + btn('party','欠席','absent') + btn('party','未定','pending') + btn('party','代理出席','', '代理') +
          '</div>' + (m.partyFee > 0 ? '<div class="current">' + esc(m.partyName || '懇親会') + '費 ¥' + Number(m.partyFee).toLocaleString('ja-JP') + '（当日集金）</div>' : '') + '</div>';
   }
 
   // 5 備考・オブザーバー
-  var n5 = D.meetings.length > 1 ? '05' : '04';
+  var n5 = nn();
   h += '<div class="step"><div class="h"><span class="n">' + n5 + '</span><span class="t">備考・オブザーバー</span><span class="opt">任意</span></div>' +
        '<textarea id="note" placeholder="例：懇親会は20時までで退席します／19:45頃に遅参します">' + esc(S.note) + '</textarea>' +
        '<div style="font-size:11.5px;color:#6b7280;margin-top:4px">備考は出欠状況ページで対象者に見えます。欠席の理由（体調など）は書かなくて大丈夫です</div>' +
@@ -295,6 +319,12 @@ function render(){
   Array.prototype.forEach.call(el.querySelectorAll('.nm'), function(b){ b.onclick = function(){ S.name = b.dataset.n; prefill(); render(); }; });
   Array.prototype.forEach.call(el.querySelectorAll('.opt-btn'), function(b){
     b.onclick = function(){
+      var stp = b.closest('.step'); if(stp) stp.classList.remove('miss');
+      if(b.dataset.evn !== undefined){   // 行事の出欠（名前で覚える）
+        S.evs = S.evs || {}; S.evs[b.dataset.evn] = b.dataset.v;
+        Array.prototype.forEach.call(b.parentNode.querySelectorAll('.opt-btn'), function(x){ x.classList.toggle('on', x === b); });
+        return;
+      }
       S[b.dataset.k] = b.dataset.v;
       Array.prototype.forEach.call(el.querySelectorAll('.opt-btn[data-k="' + b.dataset.k + '"]'), function(x){ x.classList.toggle('on', x === b); });
       if(b.dataset.k === 'attend') document.getElementById('proxy').classList.toggle('on', b.dataset.v === '代理出席');
@@ -312,12 +342,16 @@ function btn(k, v, cls, label){
 
 function submit(){
   var m = meeting(), hasParty = m.party === '有', err = document.getElementById('err');
-  var problems = [];
-  if(!S.name) problems.push('お名前を選んでください');
-  if(!S.attend) problems.push('会議の出欠を選んでください');
+  var problems = [], miss = [];
+  if(!S.name){ problems.push('お名前を選んでください'); miss.push('name'); }
+  if(!S.attend){ problems.push('会議の出欠を選んでください'); miss.push('attend'); }
   if(S.attend === '代理出席' && !S.proxyName) problems.push('代理者の氏名を入力してください');
-  if(hasParty && !S.party) problems.push((m.partyName || '懇親会') + 'の出欠を選んでください');
-  if(problems.length){ err.textContent = 'まだ入っていない所があります：' + problems.join('　／　'); err.style.display = 'block'; try { err.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){} return; }
+  myEvents().forEach(function(x){ if(!(S.evs || {})[x.e.name]){ problems.push(x.e.name + 'の出欠を選んでください'); miss.push('ev:' + x.e.name); } });
+  if(hasParty && !S.party){ problems.push((m.partyName || '懇親会') + 'の出欠を選んでください'); miss.push('party'); }
+  if(problems.length){ err.textContent = 'まだ入っていない所があります：' + problems.join('　／　'); err.style.display = 'block'; var first = null; Array.prototype.forEach.call(document.querySelectorAll('.step[data-need]'), function(st){ var on = miss.indexOf(st.dataset.need) >= 0; st.classList.toggle('miss', on); if(on && !first) first = st; });
+    try { (first || err).scrollIntoView({ behavior: 'smooth', block: first ? 'start' : 'center' }); } catch(e){}
+    if(first){ var tip = document.getElementById('missTip'); if(tip) tip.remove(); tip = document.createElement('div'); tip.id = 'missTip'; tip.textContent = '赤い枠の所がまだ選ばれていません'; tip.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:#c5221f;color:#fff;font-weight:900;font-size:14px;border-radius:999px;padding:10px 18px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:calc(100vw - 24px)'; document.body.appendChild(tip); setTimeout(function(){ if(tip.parentNode) tip.remove(); }, 4000); }
+    return; }
   err.style.display = 'none';
   // 懇親会のキャンセル期限を過ぎてから「出席 → 欠席」に変えるとき：一度だけやわらかく確認する
   var ex = existing(), late = hasParty && m.cancel && m.cancel.passed && ex && ['出席','遅参','代理出席'].indexOf(ex.party) >= 0 && S.party === '欠席';
@@ -340,13 +374,14 @@ function submit(){
     party: hasParty ? S.party : '',
     proxyName: S.attend === '代理出席' ? S.proxyName : '', proxyYaku: S.attend === '代理出席' ? S.proxyYaku : '',
     mandate: S.attend === '代理出席' ? S.mandate : '',
+    events: (function(){ var o = {}; myEvents().forEach(function(x){ o[x.e.name] = (S.evs || {})[x.e.name] || ''; }); return o; })(),
     note: S.note, obs: S.obs, obsNames: S.obs === 'あり' ? S.obsNames : '', obsParty: S.obs === 'あり' ? S.obsParty : ''
   };
   google.script.run.withSuccessHandler(function(r){
     document.getElementById('app').innerHTML =
       '<div class="done-box"><div class="en">THANK YOU</div><p>ご回答を受け付けました。</p>' +
       '<div class="sum"><div><span>会議</span><b>' + esc(m.label) + '</b></div><div><span>お名前</span><b>' + esc(S.name) + '</b></div>' +
-      '<div><span>会議の出欠</span><b>' + esc(S.attend) + '</b></div>' + (hasParty ? '<div><span>懇親会</span><b>' + esc(S.party) + '</b></div>' : '') + '</div>' +
+      '<div><span>会議の出欠</span><b>' + esc(S.attend) + '</b></div>' + myEvents().map(function(x){ return '<div><span>' + esc(x.e.name) + '</span><b>' + esc((S.evs || {})[x.e.name] || '') + '</b></div>'; }).join('') + (hasParty ? '<div><span>' + esc(m.partyName || '懇親会') + '</span><b>' + esc(S.party) + '</b></div>' : '') + '</div>' +
       '<p style="font-size:12px;color:#6b7280;margin-top:14px">変更がある場合は、同じURLから再度ご回答ください。</p>' +
       '<button class="again" id="again">続けて回答する</button>' +
       (EMBED ? '' : '<div style="margin-top:14px"><a class="again" style="display:inline-block;text-decoration:none;background:#fff;color:var(--blue);border:2px solid var(--blue)" href="' + esc(location.origin + location.pathname.replace(/answer\.html$/, '') + '?id=' + encodeURIComponent(S.meetingId)) + '">出欠状況を見る</a></div>') + '</div>';
@@ -355,9 +390,12 @@ function submit(){
     if(EMBED){ postUp({ type: 'answered', id: S.meetingId, name: S.name }); }
     document.getElementById('again').onclick = function(){
       // 回答一覧を更新してから、同じ会議で入力をやり直す
-      S = { meetingId: S.meetingId, name:'', attend:'', party:'', proxyName:'', proxyYaku:'', mandate:'', note:'', obs:'なし', obsNames:'', obsParty:'' };
+      S = { meetingId: S.meetingId, name:'', attend:'', party:'', proxyName:'', proxyYaku:'', mandate:'', note:'', obs:'なし', obsNames:'', obsParty:'', evs:{} };
       document.getElementById('app').innerHTML = '<div class="msg load">回答フォームを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div>';
-      google.script.run.withSuccessHandler(function(d){ D = d; render(); window.scrollTo(0, 0); })
+      google.script.run.withSuccessHandler(function(d){
+        if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
+        if(ONLY && INITIAL && d.meetings.some(function(m){ return m.id === INITIAL; })) d.meetings = d.meetings.filter(function(m){ return m.id === INITIAL; });
+        D = d; if(!d.meetings.some(function(m){ return m.id === S.meetingId; }) && d.meetings.length) S.meetingId = d.meetings[0].id; render(); window.scrollTo(0, 0); })
         .withFailureHandler(function(e){ document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>'; })
         .answerData();
     };

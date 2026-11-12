@@ -520,6 +520,7 @@ function calcHas(){
   if(!DATA) return;
   DATA.people.forEach(function(p){ if(p.feeMeeting > 0) HAS.m = true; if(p.feeParty > 0) HAS.p = true; if((p.feeOther||0) > 0) HAS.o = true; });
   HAS.any = HAS.m || HAS.p || HAS.o;
+  OTHER_VARIES = DATA.people.some(function(p){ return !!p.otherParts; });   // その他費の内訳がある＝人によって金額が違う
   // お金が無い会議では集金タイル・未収フィルタを隠す
   var cashTile = document.querySelector('.tile.cash'), dueTile = document.querySelector('.tile.due');
   if(cashTile) cashTile.style.display = HAS.any ? '' : 'none';
@@ -585,7 +586,8 @@ function item(p){
         '<button class="btn checkin wide' + (p.checkedIn ? ' on' : '') + '" data-a="checkedIn">' + (p.checkedIn ? '✔ 出席済み（取り消す）' : '出席にする') + '</button>' +
         (HAS.m ? '<button class="btn' + (p.paidMeeting ? ' on' : '') + (HAS.p ? '' : ' wide') + '" data-a="paidMeeting"' + (p.feeMeeting ? '' : ' disabled') + '>会議費<small>' + (p.feeMeeting ? yen(p.feeMeeting) : 'なし') + '</small></button>' : '') +
         (HAS.p ? '<button class="btn' + (p.paidParty ? ' on' : '') + (HAS.m ? '' : ' wide') + '" data-a="paidParty"' + (p.feeParty ? '' : ' disabled') + '>' + (p.cancel ? 'キャンセル料' : '懇親会費') + '<small>' + (p.feeParty ? yen(p.feeParty) : 'なし') + '</small></button>' : '') +
-        (HAS.o ? '<button class="btn' + (p.paidOther ? ' on' : '') + (feeOther ? '' : ' disabled') + '" data-a="paidOther">' + esc(otherName) + '<small>' + (feeOther ? yen(feeOther) : 'なし') + '</small></button>' : '') +
+        (HAS.o ? '<button class="btn' + (p.paidOther ? ' on' : '') + (feeOther ? '' : ' disabled') + '" data-a="paidOther"' + (feeOther ? '' : ' disabled') + '>' + esc(OTHER_VARIES ? 'その他費' : otherName) + '<small>' + (feeOther ? yen(feeOther) : 'なし') + '</small></button>' : '') +
+        (HAS.o && OTHER_VARIES && feeOther ? '<div style="flex-basis:100%;width:100%;grid-column:1/-1;font-size:13px;line-height:1.5;color:#3d4756;background:#f3f6fb;border-radius:8px;padding:6px 10px">その他費の内訳：<b>' + esc(p.otherParts || '当日変更で直した金額') + '</b></div>' : '') +
         (fee ? '<button class="btn receipt' + (feeOther ? '' : ' wide') + (p.receipt ? ' on' : '') + '" data-a="receipt">' + (p.receipt ? '領収書 渡し済み' : '領収書を渡した') + '<small>' + (p.receipt ? 'タップで取り消し' : '渡したらタップ') + '</small></button>' : '') +
         (p.attend === '代理出席' ? '<button class="btn mandate wide' + (p.mandate ? ' on' : '') + '" data-a="mandate">' + (p.mandate ? '委任状 受領済み' : '委任状を受け取った') + '</button>' : '') +
         (isObs(p) ? '' : '<button class="btn change wide" data-a="change">当日変更（ZOOM・欠席' + (HAS.any ? '・金額' : '') + '）</button>') +
@@ -618,9 +620,11 @@ function item(p){
 var ATT = ['出席','遅参','出席（ZOOM）','代理出席','欠席','未定'];
 var PTY = ['出席','遅参','欠席','未定','代理出席'];
 var FEE_M = 0, FEE_P = 0, FEE_O = 0;   // 会議の定価（全額ボタン用）
+var OTHER_VARIES = false;   // その他費が人によって違う（行事の会費が入っている）
 function feeDefaults(){
   if(!DATA) return;
   DATA.people.forEach(function(p){ if(isObs(p)) return; FEE_M = Math.max(FEE_M, p.feeMeeting||0); FEE_P = Math.max(FEE_P, p.feeParty||0); FEE_O = Math.max(FEE_O, p.feeOther||0); });
+  OTHER_VARIES = DATA.people.some(function(p){ return !!p.otherParts; });
 }
 function openChange(p){
   feeDefaults();
@@ -633,7 +637,7 @@ function openChange(p){
     (hasParty ? '<label class="t">懇親会の出欠</label>' + opts('o_pty', PTY, st.party) : '') +
     (FEE_M ? fee('f_m', '会議費（欠席・ZOOMでもキャンセル料を取るなら金額を残す）', st.fm, FEE_M) : '<input type="hidden" id="f_m" value="0">') +
     (hasParty ? (FEE_P ? fee('f_p', '懇親会費', st.fp, FEE_P) : '<input type="hidden" id="f_p" value="0">') : '') +
-    (FEE_O ? fee('f_o', (DATA.otherName || 'その他費'), st.fo, FEE_O) : '') +
+    (FEE_O ? fee('f_o', (DATA.otherName || 'その他費') + (OTHER_VARIES && p.otherParts ? '（' + p.otherParts + '）' : ''), st.fo, OTHER_VARIES ? (st.fo || 0) : FEE_O) : '') +
     '<label class="t">メモ（任意）</label><textarea id="f_memo" placeholder="例：体調不良のため急遽ZOOM／キャンセル料として懇親会費のみ"></textarea>' +
     '<div class="err" id="dErr"></div>' +
     '<div class="acts"><button type="button" id="dCancel">やめる</button><button type="button" class="ok" id="dSave">この内容で変更</button></div>';
@@ -644,7 +648,7 @@ function openChange(p){
     Array.prototype.forEach.call(dlg.querySelectorAll('#o_att button'), function(x){ x.setAttribute('aria-pressed', x===b ? 'true':'false'); });
     var comes = ['出席','遅参','代理出席'].indexOf(b.dataset.v) >= 0;
     document.getElementById('f_m').value = comes ? FEE_M : 0;
-    if(document.getElementById('f_o')) document.getElementById('f_o').value = comes ? FEE_O : 0;
+    if(document.getElementById('f_o') && !OTHER_VARIES) document.getElementById('f_o').value = comes ? FEE_O : 0;   // 人によって違うとき（行事の会費）は、勝手に書き換えない
   }; });
   Array.prototype.forEach.call(dlg.querySelectorAll('#o_pty button'), function(b){ b.onclick = function(){
     Array.prototype.forEach.call(dlg.querySelectorAll('#o_pty button'), function(x){ x.setAttribute('aria-pressed', x===b ? 'true':'false'); });
