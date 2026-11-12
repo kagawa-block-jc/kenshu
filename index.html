@@ -669,7 +669,7 @@ function render(d, id){
     var title = '出欠を回答する' + (acc.length > 1 ? '（受付中 ' + acc.length + '件）' : '');
     var mlist = '';
     if(listM.length > 1){
-      mlist = '<div class="mlist">' + listM.map(function(x){ var dm = x.date.split('-'), dt = new Date(x.date + 'T00:00:00'); var st = !me ? '' : (x.answered || []).indexOf(me) >= 0 ? '<span class="st ok">回答済</span>' : '<span class="st ng">未回答</span>'; return '<div class="mrow' + (x.id === target ? ' on' : '') + '" data-ans="' + esc(x.id) + '"><div class="d"><b>' + (+dm[1]) + '/' + (+dm[2]) + '</b><small>' + '日月火水木金土'[dt.getDay()] + '</small></div><div class="t"><b>' + esc(x.name) + '</b><small>' + esc(x.type) + (x.time ? '　' + esc(x.time) + '～' : '') + (x.gather ? '<span style="color:#b45309">（' + esc(x.gather.time) + '集合）</span>' : '') + (x.place ? '　📍 ' + esc(x.place) : '') + (x.deadline ? '　締切 ' + esc(fmtJ(x.deadline)) : '') + (x.accepting ? '' : '　<span class="late">締切後・変更可</span>') + '</small></div>' + st + '</div>'; }).join('') + '</div>' +
+      mlist = '<div class="mlist">' + listM.map(function(x){ var dm = x.date.split('-'), dt = new Date(x.date + 'T00:00:00'); var st = !me ? '' : (x.answered || []).indexOf(me) >= 0 ? '<span class="st ok">回答済</span>' : '<span class="st ng">未回答</span>'; return '<div class="mrow' + (x.id === target ? ' on' : '') + '" data-ans="' + esc(x.id) + '"><div class="d"><b>' + (+dm[1]) + '/' + (+dm[2]) + '</b><small>' + '日月火水木金土'[dt.getDay()] + '</small></div><div class="t"><b>' + esc(x.name) + '</b><small>' + esc(x.type) + (x.time ? '　' + esc(x.time) + '～' : '') + (x.gather ? '<span style="color:#b45309">（' + esc(x.gather.time) + (x.gather.word === '受付' ? '受付開始' : '集合') + '）</span>' : '') + (x.place ? '　📍 ' + esc(x.place) : '') + (x.deadline ? '　締切 ' + esc(fmtJ(x.deadline)) : '') + (x.accepting ? '' : '　<span class="late">締切後・変更可</span>') + '</small></div>' + st + '</div>'; }).join('') + '</div>' +
         '<div class="who">' + (me ? '「' + esc(me) + '」として回答済／未回答を表示<button type="button" id="meClear">別の人</button>' : '一度回答すると、次からあなたの回答済／未回答が出ます') + '</div>';
     }
     var curAcc = accepting || acc.some(function(x){ return x.id === id; });
@@ -728,7 +728,7 @@ function render(d, id){
   var dateBig = dm ? (dm[2] + '/' + dm[3] + (dm[4] ? '<small>（' + dm[4] + '）</small>' : '') + '<small style="color:var(--muted);font-weight:700">' + dm[1] + '年</small>') : esc(m.date);
   h += '<section id="s-venue" class="dots"><div class="h"><div class="jp">会 場</div><div class="en">VENUE</div></div>' +
        '<div class="vhero"><div class="when"><span class="date">' + dateBig + '</span>' + (m.time ? '<span class="time">' + esc(m.time) + '<small>開始</small></span>' : '') + '</div>' +
-       (m.gather ? '<div class="gather">🕒 <b>' + esc(m.gather.time) + ' 集合</b>' + (m.gather.why ? '　' + esc(m.gather.why) : '') + '</div>' : '') +
+       (m.gather ? '<div class="gather">🕒 <b>' + esc(m.gather.time) + ' ' + esc(m.gather.label || '集合') + '</b>' + (m.gather.why ? '　' + esc(m.gather.why) : '') + '</div>' : '') +
        '<div class="where"><span class="pin">会場</span><b>' + (m.place ? esc(m.place) : '<span style="color:var(--muted);font-weight:500">追ってご案内</span>') + '</b></div></div>' +
        (m.topics && m.topics.length ? '<div class="topics"><div class="tl">議題</div><ol>' + m.topics.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>' : '') +
        '<dl class="kv">' +
@@ -742,7 +742,7 @@ function render(d, id){
        '</dl></section>';
 
   // 懇親会
-  h += '<section id="s-party" class="dots"><div class="h"><div class="jp">懇親会</div><div class="en">RECEPTION</div></div>';
+  h += '<section id="s-party" class="dots"><div class="h"><div class="jp">' + esc(m.partyName || '懇親会') + '</div><div class="en">RECEPTION</div></div>' + (hasParty && m.partyTime ? '<div style="margin:-4px 0 10px;font-weight:900;font-size:16px">🕒 ' + esc(m.partyTime) + '</div>' : '');
   if(hasParty){
     h += '<div class="phero"><div class="pin">会場</div>' +
            '<div class="nm">' + (m.partyPlace ? esc(m.partyPlace) : '<span style="color:var(--muted);font-weight:500;font-size:16px">追ってご案内</span>') + '</div>' +

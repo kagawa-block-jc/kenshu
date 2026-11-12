@@ -143,6 +143,7 @@ var D = null, S = { meetingId:'', name:'', attend:'', party:'', proxyName:'', pr
 var INITIAL = qp('id');
 var EMBED = qp('embed') === '1';
 var ME = qp('me');   // 閲覧ページの「回答」タブに埋め込まれているとき
+var ONLY = qp('only') === '1';   // この会議だけを出す
 var PROJECT = qp('project').trim();   // プロジェクトの入口から開いたとき：その会議だけ出す（なければ全部）
 if(EMBED){ document.documentElement.classList.add('embed'); }
 // 閲覧ページへ連絡する。Googleのページは枠が二重になっているので、親をたどって全部に送る
@@ -160,6 +161,7 @@ window.addEventListener('resize', function(){ fitEn(); });
 function bootAnswer(d){
   D = d;
   if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
+  if(ONLY && INITIAL && d.meetings.some(function(m){ return m.id === INITIAL; })) d.meetings = d.meetings.filter(function(m){ return m.id === INITIAL; });   // ?only=1：この会議だけを出す（案内文の「この会議だけの回答ページ」）
   if(!d.meetings.length){ document.getElementById('app').innerHTML = '<div class="msg">現在、回答を受け付けている会議はありません。</div>'; return; }
   S.meetingId = d.meetings.some(function(m){ return m.id === INITIAL; }) ? INITIAL : d.meetings[0].id;
   // 前回の名前を覚えておく（同じ端末なら選び直し不要）。埋め込み時は閲覧ページから渡された名前を優先
@@ -177,6 +179,7 @@ google.script.run.withSuccessHandler(function(d){
   if(!__aStart){ bootAnswer(d); return; }
   // 最新に入れ替える。選びかけの内容（名前・出欠）は消さない
   if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
+  if(ONLY && INITIAL && d.meetings.some(function(m){ return m.id === INITIAL; })) d.meetings = d.meetings.filter(function(m){ return m.id === INITIAL; });   // ?only=1：この会議だけを出す（案内文の「この会議だけの回答ページ」）
   D = d;
   if(!d.meetings.length){ document.getElementById('app').innerHTML = '<div class="msg">現在、回答を受け付けている会議はありません。</div>'; return; }
   if(!d.meetings.some(function(m){ return m.id === S.meetingId; })){ S.meetingId = d.meetings[0].id; prefill(); render();   // 選んでいた会議がなくなった：選びかけの出欠を別の会議に持ち越さない
@@ -208,7 +211,7 @@ function render(){
   h += '<div class="hero"><div class="en">' + esc(ORG.en || '') + '<br><b>RSVP</b></div>' +
        '<div class="org">' + esc(ORG.name || '') + '</div>' +
        '<div class="ttl">' + esc(m.label) + '</div>' +
-       '<div class="meta">' + esc(m.date) + '　' + esc(m.time) + '～' + (m.gather ? '<b style="color:#b45309">（' + esc(m.gather.time) + ' 集合' + (m.gather.why ? '：' + esc(m.gather.why) : '') + '）</b>' : '') + '　' + esc(m.place) + (m.deadline ? '　／　回答締切 ' + esc(m.deadline) : '') + (m.dress ? '<br>服装：<b>' + esc(m.dress) + '</b>' : '') + '</div>' +
+       '<div class="meta">' + esc(m.date) + '　' + esc(m.time) + '～' + (m.gather ? '<b style="color:#b45309">（' + esc(m.gather.time) + ' ' + esc(m.gather.label || '集合') + (m.gather.why ? '：' + esc(m.gather.why) : '') + '）</b>' : '') + '　' + esc(m.place) + (m.deadline ? '　／　回答締切 ' + esc(m.deadline) : '') + (m.dress ? '<br>服装：<b>' + esc(m.dress) + '</b>' : '') + '</div>' +
        (m.note ? '<div class="note">' + esc(m.note).replace(/\n/g, '<br>') + '</div>' : '') +
        '<div class="lead">上記会議の出欠確認です。下記より出欠のご回答をお願いいたします。<br><small>お名前を選び、出欠・懇親会を選んで「送信」を押してください。回答後の変更も同じ手順で上書きできます。</small></div>' +
        '</div>';
@@ -234,8 +237,9 @@ function render(){
   }
 
   // 埋め込み時：日時・場所をひと目で分かるように名前の上に出す（詳細は閲覧ページの会場へ）
-  h += '<div class="minfo"><b>' + esc(m.label) + '</b><br>📅 ' + esc(m.date) + '　<b>' + esc(m.time) + '</b>～' + (m.gather ? '　<span class="gt">🕒 ' + esc(m.gather.time) + ' 集合' + (m.gather.why ? '（' + esc(m.gather.why) + '）' : '') + '</span>' : '') +
-       '<br>📍 ' + (m.place ? esc(m.place) : '<span style="color:#6b7280">会場は追ってご案内</span>') + (hasParty ? '　🍺 懇親会あり' : '') +
+  h += '<div class="minfo"><b>' + esc(m.label) + '</b><br>📅 ' + esc(m.date) + '　<b>' + esc(m.time) + '</b>～' + (m.gather ? '　<span class="gt">🕒 ' + esc(m.gather.time) + ' ' + esc(m.gather.label || '集合') + (m.gather.why ? '（' + esc(m.gather.why) + '）' : '') + '</span>' : '') +
+       '<br>📍 ' + (m.place ? esc(m.place) : '<span style="color:#6b7280">会場は追ってご案内</span>') + (hasParty ? '　🍺 ' + esc(m.partyName || '懇親会') + 'あり' + (m.partyTime ? '（' + esc(m.partyTime) + '）' : '') : '') +
+       ((m.docs || []).length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + m.docs.map(function(d){ return '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:900;font-size:13.5px;text-decoration:none;background:#fff">📄 ' + esc(d.name) + 'を見る</a>'; }).join('') + '</div>' : '') +
        '<br><button type="button" class="dl" id="goDetail">会議の詳細（会場・懇親会・服装など）を見る ↓</button></div>';
   // 2 氏名
   h += '<div class="step"><div class="h"><span class="n">' + (D.meetings.length > 1 ? '02' : '01') + '</span><span class="t">お名前</span><span class="req">必須</span></div><div class="names">';
@@ -267,9 +271,9 @@ function render(){
   // 4 懇親会
   var n4 = D.meetings.length > 1 ? '04' : '03';
   if(hasParty){
-    h += '<div class="step"><div class="h"><span class="n">' + n4 + '</span><span class="t">懇親会の出欠</span><span class="req">必須</span></div><div class="grid">' +
+    h += '<div class="step"><div class="h"><span class="n">' + n4 + '</span><span class="t">' + esc(m.partyName || '懇親会') + 'の出欠</span><span class="req">必須</span></div><div class="grid">' +
          btn('party','出席','') + btn('party','遅参','') + btn('party','欠席','absent') + btn('party','未定','pending') + btn('party','代理出席','', '代理') +
-         '</div>' + (m.partyFee > 0 ? '<div class="current">懇親会費 ¥' + Number(m.partyFee).toLocaleString('ja-JP') + '（当日集金）</div>' : '') + '</div>';
+         '</div>' + (m.partyFee > 0 ? '<div class="current">' + esc(m.partyName || '懇親会') + '費 ¥' + Number(m.partyFee).toLocaleString('ja-JP') + '（当日集金）</div>' : '') + '</div>';
   }
 
   // 5 備考・オブザーバー
@@ -312,7 +316,7 @@ function submit(){
   if(!S.name) problems.push('お名前を選んでください');
   if(!S.attend) problems.push('会議の出欠を選んでください');
   if(S.attend === '代理出席' && !S.proxyName) problems.push('代理者の氏名を入力してください');
-  if(hasParty && !S.party) problems.push('懇親会の出欠を選んでください');
+  if(hasParty && !S.party) problems.push((m.partyName || '懇親会') + 'の出欠を選んでください');
   if(problems.length){ err.textContent = 'まだ入っていない所があります：' + problems.join('　／　'); err.style.display = 'block'; try { err.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){} return; }
   err.style.display = 'none';
   // 懇親会のキャンセル期限を過ぎてから「出席 → 欠席」に変えるとき：一度だけやわらかく確認する
