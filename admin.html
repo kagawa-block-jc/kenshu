@@ -300,6 +300,15 @@
   .seg label{display:inline-flex;align-items:center;padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer;margin:0}
   .seg label.on{background:var(--blue);border-color:var(--blue);color:#fff}
   .seg input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.lv-row td{background:#fff7f7;padding:10px 0 0 !important}
+.pp-s{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.pp-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.pp-h b{font-size:14.5px}.pp-h span{font-size:13px;color:#5b6675;font-weight:700}
+.lv-c.ng{background:#fdecec;border-color:#f3c2c2}.lv-c:not(.ok):not(.ng){background:#f3f5f8;border-color:#dde3ea}
+.up-b{margin:0 14px 12px;padding:10px 12px;background:#fff;border:1px solid #f3c2c2;border-left:4px solid #c62828;border-radius:8px}
+.up-h{font-weight:800;color:#9b1c1c;font-size:14px;margin-bottom:8px}
+.lv-cs{display:flex;flex-wrap:wrap;gap:6px}
+.lv-c{display:inline-flex;flex-direction:column;padding:5px 10px;border-radius:8px;background:#fdecec;border:1px solid #f3c2c2;font-size:13.5px;font-weight:700;line-height:1.3}
+.lv-c.ok{background:#e9f7ee;border-color:#bfe3cc}.lv-c small{font-size:11px;font-weight:400;color:#5b6675}
 .tdirty{background:#fff4e5;border:1px solid #f0c98a;color:#7a4a00;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;line-height:1.6}
 .verBar{background:#fff4e5;border-bottom:1px solid #f0c98a;color:#7a4a00;padding:10px 14px;font-size:13.5px;line-height:1.6;font-weight:600}
 .verOk,.verNg{margin:10px 0 8px;padding:10px 12px;border-radius:10px;font-weight:700;font-size:14px;line-height:1.6}
@@ -1134,7 +1143,7 @@ function viewLinks(){
     row('出欠回答ページ（直リンク）', String((D.settings||{})['回答ページURL（外部）'] || '').trim() || (u + '?answer=1'), true, '最初の案内文・催促に載せるのはこれ（案内の段階で全員の出欠まで見せない）' + (String((D.settings||{})['回答ページURL（外部）'] || '').trim() ? '。Googleの外に置いた回答ページ（複数アカウントの人も開ける）' : '')) +
     (D.pollTab ? row('日程調整（直リンク）', vq('poll=調整ID'), true, '「日程調整」タブの各行の「URLをコピー」で調整IDが入った形になる') : '') +
     (D.projectTab ? (D.projects || []) : []).filter(function(p){ return p.state !== '終了'; }).map(function(p){ var pu = vq('project=' + encodeURIComponent(p.name)); return '<tr><td class="name">📁 ' + esc(p.name) + ' <span class="tag g">全体に配ってOK</span><div class="muted" style="font-size:12px;font-weight:400;white-space:normal">この小委員会・事業の専用ページ。いつもの出欠ページが、この予定を上にして開きます' + (p.leader ? '（リーダー：' + esc(p.leader) + '）' : '') + '</div></td><td><input readonly value="' + esc(pu) + '" style="width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:monospace" onclick="this.select()"></td><td style="white-space:nowrap"><a class="btn s" href="' + esc(pu) + '" target="_blank" rel="noopener">開く ↗</a> <button class="btn s" data-copy="' + esc(pu) + '">コピー</button></td></tr>'; }).join('');
-  if(D.isAdmin) h += row('当日受付ページ', D.receptionPage || u, false, 'タブレットで開く。出席・集金を記録。<b style="color:var(--ink)">管理ページと同じログイン</b>（管理者かスタッフのメール＋6桁コード。端末ごとに初回だけ、30日保持）。受付担当は前日までにタブレットでログインしておく');
+  if(D.isAdmin) h += row('当日受付ページ', recPageUrl(), false, 'タブレットで開く。出席・集金を記録。<b style="color:var(--ink)">管理ページと同じログイン</b>（管理者かスタッフのメール＋6桁コード。端末ごとに初回だけ、30日保持）。受付担当は前日までにタブレットでログインしておく');
   if(D.isAdmin || D.isStaff) h += row('管理ページ（このページ）', D.adminPage || (u + '?admin=1'), false, 'メール＋コードでログイン。名簿の「権限」がある人だけ入れる');
   h += '</tbody></table></div>';
   if(D.isAdmin) h += '<div class="card" id="verCard" style="margin-top:14px"><div style="font-weight:700;margin-bottom:4px">更新の確認</div>' +
@@ -1264,12 +1273,27 @@ function mailBox(d){
 /* ---------- 受付・集金 ---------- */
 var REC = null;
 function loadReception(){ api().withSuccessHandler(function(l){ REC = l; rerender('reception', viewReception); }).withFailureHandler(function(e){ toast('エラー：'+e.message); }).adminReceptionList(TOKEN); }
+/** 当日受付ページのURL：設定の「受付ページURL（外部）」→ このページが GitHub に置いてあれば同じ場所の reception.html → Apps Script のURL */
+function recPageUrl(){
+  var u = D.receptionPage || D.webappUrl;
+  if((!D.receptionPage || D.receptionPage === D.webappUrl) && /github\.io$/.test(location.hostname)) u = location.href.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') + 'reception.html';
+  return u;
+}
+/** 確定前の会議で、受付したのにまだ受け取っていないお金（ある会議だけ出す） */
+function unpaidBox(r){
+  var L = r.unpaidList || []; if(!L.length) return '';
+  var tot = 0; L.forEach(function(p){ p.it.forEach(function(x){ tot += x.v; }); });
+  return '<tr class="lv-row"><td colspan="8"><div class="up-b"><div class="up-h">⚠ 未収があります：' + L.length + '名・' + yen(tot) + '</div><div class="lv-cs">' +
+    L.map(function(p){ return '<span class="lv-c ng">' + esc(p.n) + '<small>' + esc((p.l ? p.l + '　' : '') + p.it.map(function(x){ return x.k + ' ' + yen(x.v); }).join('・')) + '</small></span>'; }).join('') +
+    '</div><div class="muted" style="font-size:11.5px;margin-top:6px">受付をした人のうち、受け取りのチェックがないもの。受け取ったら当日受付ページでチェックを付けてください</div></div></td></tr>';
+}
 function viewReception(){
-  var h = '<div class="bar"><h2>受付・集金</h2><a class="btn p" href="' + esc(D.receptionPage || D.webappUrl) + '" target="_blank" rel="noopener" style="text-decoration:none">当日受付ページを開く</a></div>';
+  var h = '<div class="bar"><h2>受付・集金</h2><span style="flex:1"></span><button type="button" class="btn s" id="recRefresh">最新にする</button> <a class="btn p" href="' + esc(recPageUrl()) + '" target="_blank" rel="noopener" style="text-decoration:none">当日受付ページを開く</a></div>';
   if(!REC) return h + '<div class="card"><div class="empty">読み込み中…</div></div>';
   h += '<div class="card tbl"><table><thead><tr><th>会議</th><th>開催日</th><th>受付シート</th><th>出席</th><th>集金</th><th>未収</th><th>領収書</th><th></th></tr></thead><tbody>';
+  var t0 = new Date(); t0.setHours(0,0,0,0);
   REC.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); }).forEach(function(r){
-    var st = r.stats;
+    var st = r.stats, past = r.date && new Date(r.date) < t0;   // 終わった会議：作り直し（更新・リセット）は出さず、確定を促す
     h += '<tr><td class="name">' + esc(r.label) + '<div class="muted" style="font-size:11.5px;font-weight:400">' + esc(r.id) + '</div></td><td>' + esc(fmtD(r.date)) + '</td>' +
       '<td>' + (r.locked ? '<span class="tag y">確定済</span>' : r.has ? '<span class="tag g">作成済</span>' : '<span class="tag r">未作成</span><div class="muted" style="font-size:11.5px;font-weight:400">会議の前日までに「受付シートを作成」を押す</div>') + '</td>' +
       '<td>' + (st ? st.checkedIn + ' / ' + st.expected : '—') + '</td>' +
@@ -1278,15 +1302,18 @@ function viewReception(){
       '<td class="muted">' + (st ? (st.receipts || 0) + ' / ' + st.checkedIn : '—') + '</td>' +
       '<td style="white-space:nowrap">' +
         (r.locked ? (D.isAdmin ? '<button class="btn s" data-unlock="' + esc(r.id) + '">確定を解除</button>' : '<span class="muted" style="font-size:12px">確定済（解除は管理者）</span>') :
-          (r.has ? '<button class="btn s" data-sync="' + esc(r.id) + '">更新（チェック保持）</button> ' : '<button class="btn p" data-sync="' + esc(r.id) + '" style="font-size:14px;padding:9px 16px">受付シートを作成</button> ') +
-          (r.has && D.isAdmin ? '<button class="btn s" data-lock="' + esc(r.id) + '">確定</button> <button class="btn s d" data-reset="' + esc(r.id) + '">リセット</button> ' : '')) +
-        (r.has ? ' <button class="btn s" data-roll="' + esc(r.id) + '">名簿</button>' : '') +
+          (r.has ? (past ? '' : '<button class="btn s" data-sync="' + esc(r.id) + '">更新（チェック保持）</button> ') : '<button class="btn p" data-sync="' + esc(r.id) + '" style="font-size:14px;padding:9px 16px">受付シートを作成</button> ') +
+          (r.has && D.isAdmin ? (past ? '<button class="btn p" data-lock="' + esc(r.id) + '">確定する</button> ' : '<button class="btn s" data-lock="' + esc(r.id) + '">確定</button> <button class="btn s d" data-reset="' + esc(r.id) + '">リセット</button> ') : '')) +
+        (r.has ? ' <button class="btn s" data-people="' + esc(r.id) + '">参加者を見る</button>' : '') +
+        (r.has && past && !r.locked ? '<div class="muted" style="font-size:11.5px;margin-top:4px;white-space:normal">会議は終わりました。受付の付け忘れがなければ「確定する」</div>' : '') +
       '</td></tr>';
+    if(!r.locked) h += unpaidBox(r);
   });
-  return h + '</tbody></table></div><p class="muted" style="font-size:12.5px;margin-top:8px">更新＝最新の回答で作り直し（受付チェックは残る）。リセット＝チェックも消して作り直し。確定＝編集保護・自動更新の対象外。名簿＝読み上げ用の出席確認名簿をスプレッドシートに作る。</p>' +
+  return h + '</tbody></table></div><p class="muted" style="font-size:12.5px;margin-top:8px">参加者を見る＝その会議に来た人・来なかった人・懇親会に出た人を一覧で見る（文字でコピーもできる）。更新＝最新の回答で作り直し（受付チェックは残る。会議の前だけ出ます）。リセット＝チェックも消して作り直し。確定＝編集保護・自動更新の対象外。</p>' +
     '<p class="muted" style="font-size:12.5px;margin-top:4px"><b>会議が終わったら：</b>受付の付け忘れ・当日変更を直す → 「確定」 → 出席状況タブで「最新に更新」。出席状況は受付チェックを正にするので、確定前に受付漏れがないか確認してください。</p>';
 }
 function bindReception(){
+  var rf = document.getElementById('recRefresh'); if(rf) rf.onclick = function(){ rf.disabled = true; rf.textContent = '読み込み中…'; loadReception(); };
   var run = function(fn, id, msg){ busy(true); api().withSuccessHandler(function(r){ busy(false); closeModal(true); REC = r.list; rerender('reception', viewReception); toast(msg); }).withFailureHandler(function(e){ busy(false); showErr(e.message); toast('エラー：'+e.message); })[fn](TOKEN, id); };
   var isPast = function(id){ var m = D.meetings.filter(function(x){ return x['会議ID'] === id; })[0]; if(!m || !m['開催日']) return false; var t = new Date(); t.setHours(0,0,0,0); return new Date(m['開催日']) < t; };
   Array.prototype.forEach.call(document.querySelectorAll('[data-sync]'), function(b){ b.onclick = function(){
@@ -1297,7 +1324,41 @@ function bindReception(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-reset]'), function(b){ b.onclick = function(){ confirmBox((isPast(b.dataset.reset) ? '【終了した会議】' : '') + '受付_' + b.dataset.reset + ' をリセットしますか？', '受付・会議費・懇親会費・領収書のチェックと当日変更が全部消えます。回答を取り込み直すだけなら「更新」を使ってください。消えたチェックは戻せません。', function(){ run('adminReceptionReset', b.dataset.reset, 'リセットしました'); }, true); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-lock]'), function(b){ b.onclick = function(){ confirmBox('受付_' + b.dataset.lock + ' を確定しますか？', '編集保護がかかり、受付ページ・自動更新からも変更できなくなります。', function(){ busy(true); api().withSuccessHandler(function(r){ busy(false); closeModal(true); REC = r.list; rerender('reception', viewReception); toast('確定しました'); }).withFailureHandler(function(e){ busy(false); showErr(e.message); }).adminReceptionLock(TOKEN, b.dataset.lock, true); }); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-unlock]'), function(b){ b.onclick = function(){ confirmBox('受付_' + b.dataset.unlock + ' の確定を解除しますか？', '編集保護が外れ、受付ページや自動更新から変更できる状態に戻ります。直し終わったら再度「確定」してください。', function(){ busy(true); api().withSuccessHandler(function(r){ busy(false); closeModal(true); REC = r.list; rerender('reception', viewReception); toast('解除しました'); }).withFailureHandler(function(e){ busy(false); showErr(e.message); }).adminReceptionLock(TOKEN, b.dataset.unlock, false); }); }; });
-  Array.prototype.forEach.call(document.querySelectorAll('[data-roll]'), function(b){ b.onclick = function(){ b.disabled=true; api().withSuccessHandler(function(r){ b.disabled=false; toast('名簿_' + b.dataset.roll + ' を作りました（スプレッドシート）'); }).withFailureHandler(function(e){ b.disabled=false; toast('エラー：'+e.message); }).adminRollCall(TOKEN, b.dataset.roll); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-people]'), function(b){ b.onclick = function(){ openPeople(b.dataset.people); }; });
+}
+
+/** 参加者を見る：受付シートから、来た人・来なかった人・懇親会に出た人を一覧にする（あとから振り返る用） */
+function openPeople(id){
+  showModal('<div class="mh"><h3>参加者</h3><button class="btn s" id="mClose">閉じる</button></div><div class="err" id="mErr"></div><div class="mb" style="display:block"><div id="pplBody" class="muted">読み込み中…</div></div><div class="mf"><button class="btn" id="pplCopy" disabled>文字でコピー</button><button class="btn" id="mCancel">閉じる</button></div>');
+  api().withSuccessHandler(function(P){
+    var box = document.getElementById('pplBody'); if(!box) return;
+    var R = P.rows || [], isZ = function(x){ return /ZOOM|オンライン/i.test(x.att); };
+    var came = R.filter(function(x){ return x.inn; }), zoom = R.filter(function(x){ return !x.inn && isZ(x); });
+    var miss = R.filter(function(x){ return !x.inn && !isZ(x) && /出席|遅参|代理/.test(x.att); });
+    var abs = R.filter(function(x){ return !x.inn && !isZ(x) && !/出席|遅参|代理/.test(x.att); });
+    var party = R.filter(function(x){ return x.party; });
+    var who = function(x){ return [x.l, x.y].filter(Boolean).join('　'); };
+    var sec = function(title, list, cls, note){
+      return '<div class="pp-s"><div class="pp-h"><b>' + title + '</b><span>' + list.length + '名</span></div>' + (note ? '<div class="muted" style="font-size:11.5px;margin:-2px 0 6px">' + note + '</div>' : '') +
+        (list.length ? '<div class="lv-cs">' + list.map(function(x){ return '<span class="lv-c ' + cls + '">' + esc(x.n) + '<small>' + esc(who(x)) + (x.chg ? '　当日：' + esc(x.chg) : '') + '</small></span>'; }).join('') + '</div>' : '<div class="muted" style="font-size:13px">いません</div>') + '</div>';
+    };
+    var h = '<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px"><b style="font-size:15px">' + esc(P.label) + '</b><span class="muted">' + esc(fmtD(P.date)) + '</span>' + (P.locked ? '<span class="tag y">確定済</span>' : '<span class="tag g">確定前</span>') + '</div>' +
+      sec('会議に来た人', came, 'ok', '受付をした人') +
+      (zoom.length ? sec('ZOOMで参加', zoom, '') : '') +
+      sec('来なかった人', miss, 'ng', '出席と答えていたが、受付をしていない人' + (P.locked ? '' : '（受付の付け忘れがないか確かめてから「確定」してください）')) +
+      sec('欠席', abs, '') +
+      sec(esc(P.partyName || '懇親会') + 'に出た人', party, 'ok', '懇親会に出席と答えて受付をした人と、懇親会費を受け取った人') +
+      (P.sheetUrl ? '<div style="margin-top:10px"><a href="' + esc(P.sheetUrl) + '" target="_blank" rel="noopener" style="font-size:13px">スプレッドシートの受付シートを開く ↗</a></div>' : '');
+    box.innerHTML = h; box.className = '';
+    var cp = document.getElementById('pplCopy');
+    if(cp){ cp.disabled = false; cp.onclick = function(){
+      var line = function(t, l){ return '■' + t + '（' + l.length + '名）\n' + (l.length ? l.map(function(x){ return '・' + x.n + (who(x) ? '（' + who(x) + '）' : ''); }).join('\n') : '・なし'); };
+      var txt = [P.label + '　' + fmtD(P.date), line('会議に来た人', came)].concat(zoom.length ? [line('ZOOMで参加', zoom)] : []).concat([line('来なかった人', miss), line('欠席', abs), line((P.partyName || '懇親会') + 'に出た人', party)]).join('\n\n');
+      var fb = function(){ var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch(e){} ta.remove(); toast(ok ? 'コピーしました' : 'コピーできませんでした'); };
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){ toast('コピーしました'); }, fb); else fb();
+    }; }
+    MODAL_SNAP = modalSnap();
+  }).withFailureHandler(function(e){ showErr(e.message); }).adminReceptionPeople(TOKEN, id);
 }
 
 /* ---------- 予算 ---------- */

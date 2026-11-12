@@ -26,7 +26,13 @@
 
   /* ── ヘッダー ── */
   header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--blue);box-shadow:0 2px 12px rgba(26,86,196,.10)}
-  .hd{max-width:1180px;margin:0 auto;padding:12px 16px 10px;display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:center}
+  .hd{max-width:1180px;margin:0 auto;padding:12px 16px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:6px 22px;align-items:center}
+  /* 受付シートを作るボタン：見出しの右に、色付きで目立たせる */
+  .mkb{display:flex;align-items:center;gap:10px;border:2px solid var(--blue);background:#e8f0fe;color:var(--blue);border-radius:12px;padding:10px 16px 10px 12px;min-height:54px;font:inherit;cursor:pointer;text-align:left;box-shadow:0 2px 8px rgba(26,86,196,.12)}
+  .mkb:hover{background:#dbe7fd}
+  .mkb .mkp{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;font-size:20px;font-weight:900;line-height:1;flex:0 0 auto}
+  .mkb .mkt{display:flex;flex-direction:column;line-height:1.3}.mkb .mkt b{font-size:15px;font-weight:900}.mkb .mkt small{font-size:11.5px;font-weight:700;color:#4a6fb5}
+  .mkb.first{background:var(--blue);color:#fff}.mkb.first .mkp{background:#fff;color:var(--blue)}.mkb.first .mkt small{color:#dbe7fd}
   .brand{font-family:Anton,Impact,sans-serif;line-height:.92;letter-spacing:.01em}
   .brand .l1{font-size:22px;color:var(--ink)}
   .brand .l2{font-size:22px;color:var(--blue)}
@@ -53,7 +59,7 @@
   .tile.cash span{font-size:15px}
   .tile.cash small{font-size:15px;opacity:.9;margin-top:4px}
   @media (min-width:1000px){ .tiles{grid-template-columns:repeat(8,1fr)} }
-  @media (max-width:640px){ .tiles{grid-template-columns:1fr 1fr} .tile.cash{grid-column:1 / -1} .hd{grid-template-columns:1fr;gap:4px;padding:8px 12px} .brand .l1,.brand .l2{font-size:16px;display:inline;margin-right:6px} .mt .org{display:none} .tile small{white-space:normal} }
+  @media (max-width:640px){ .mkb{width:100%;min-height:42px;margin-top:2px;padding:6px 12px 6px 8px} .mkb .mkt small{display:none} .mkb .mkp{width:24px;height:24px;font-size:17px} .tiles{grid-template-columns:1fr 1fr} .tile.cash{grid-column:1 / -1} .hd{grid-template-columns:1fr;gap:4px;padding:8px 12px} .brand .l1,.brand .l2{font-size:16px;display:inline;margin-right:6px} .mt .org{display:none} .tile small{white-space:normal} }
   .tile.ok{border-bottom-color:var(--ok)} .tile.ok b{color:var(--ok)}
   .tile.due{border-bottom-color:var(--due)} .tile.due b{color:var(--due)}
   .tile.abs{border-bottom-color:var(--due);background:var(--due-soft)} .tile.abs b{color:var(--due)}
@@ -226,10 +232,10 @@
     <div class="brand"><div class="l1" id="orgEn">ATTENDANCE</div><div class="l2">RECEPTION</div></div>
     <div class="mt">
       <div class="org" id="orgName">当日受付</div>
-      <select id="sheetSel"></select>
+      <select id="sheetSel" autocomplete="off"></select>
       <div class="sub" id="meeting">読み込んでいます</div>
-      <button type="button" id="mkSheet" style="display:none;margin-top:6px;border:1.5px solid var(--line);background:#fff;color:var(--blue);border-radius:8px;padding:8px 12px;min-height:40px;font:inherit;font-size:13px;font-weight:900;cursor:pointer">＋ ほかの会議の受付シートを作る</button>
     </div>
+    <button type="button" id="mkSheet" class="mkb" style="display:none"><span class="mkp">＋</span><span class="mkt"><b id="mkLabel">受付シートを作る</b><small id="mkSub">ほかの会議の受付を始めるとき</small></span></button>
   </div>
 </header>
 
@@ -372,13 +378,15 @@ function showCreate(){
 function bootList(list, pick){
   var sel = document.getElementById('sheetSel'); sel.innerHTML = '';
   var mk = document.getElementById('mkSheet'); if(mk){ mk.style.display = ''; mk.onclick = showCreate; }
-  if(!list.length){ document.getElementById('meeting').textContent = '受付シートがまだありません。下のボタンから作れます'; if(mk) mk.textContent = '＋ 受付シートを作る'; sel.style.display = 'none'; showCreate(); return; }
-  sel.style.display = ''; if(mk) mk.textContent = '＋ ほかの会議の受付シートを作る';
+  var mkSet = function(first){ if(!mk) return; mk.classList.toggle('first', first); document.getElementById('mkLabel').textContent = '受付シートを作る'; document.getElementById('mkSub').textContent = first ? 'まずはここを押してください' : 'ほかの会議の受付を始めるとき'; };
+  if(!list.length){ document.getElementById('meeting').textContent = '受付シートがまだありません。右のボタンから作れます'; mkSet(true); sel.style.display = 'none'; showCreate(); return; }
+  sel.style.display = ''; mkSet(false);
   list.forEach(function(it){
     var o = document.createElement('option'); o.value = it.sheet; o.textContent = it.label; sel.appendChild(o);
   });
   var cur = (pick && list.filter(function(it){ return it.sheet === pick; })[0]) || list.filter(function(it){ return it.current; })[0] || list[0];
   sel.value = cur.sheet;
+  sel.value = cur.sheet;   // ブラウザが前の選択を戻しても、読み込む会議と表示をそろえる
   if(INIT && INIT.data && INIT.sheet === cur.sheet){ SHEET = cur.sheet; OPEN = {}; applyData(INIT.data); }   // 埋め込み済み
   else load(sel.value);
   sel.onchange = function(){ load(this.value); };
@@ -398,8 +406,9 @@ function applyData(d){
 function load(sheet){
   SHEET = sheet; OPEN = {};
   document.getElementById('meeting').textContent = '読み込んでいます';
-  google.script.run.withSuccessHandler(applyData).withFailureHandler(function(e){
-    if(!pinFail(e)) document.getElementById('meeting').textContent = '読み込めません：' + e.message;
+  // 会議を続けて切り替えたとき、前に頼んだ会議の結果があとから届いても使わない（選んだ会議と中身がずれないように）
+  google.script.run.withSuccessHandler(function(d){ if(SHEET === sheet) applyData(d); }).withFailureHandler(function(e){
+    if(SHEET === sheet && !pinFail(e)) document.getElementById('meeting').textContent = '読み込めません：' + e.message;
   }).recLoad(PIN, sheet);
 }
 
@@ -730,7 +739,7 @@ function toggle(p, field){
     { id: 'nolist', t: '名簿にいない人が来た', k: '名簿にいない 一覧にない 名前がない 名前が無い 載ってない 新しい人 追加 飛び入り 出てこない', s: ['いったん紙にメモして、受付を止めない（名前・所属・受け取った金額）', '手が空いたら、管理ページの「名簿」で「＋ 人を追加」（対象にする会議にチェック）', '管理ページの「受付・集金」で、この会議の「更新（チェック保持）」を押す', 'この受付ページを読み込み直すと、その人が一覧に出るので「出席にする」'], n: ['「更新（チェック保持）」は、いままで付けたチェックを消しません', '管理ページに入れない人は、管理者・スタッフに頼みます'] },
     { id: 'nums', t: '上の数字の見方', k: '数字 見方 集金済み 出席済み 未収 議決権 定足数 人数 合計 何人', fl: '.tiles', s: ['集金済み＝受け取ったお金の合計（下の小さい字は全員分の予定額）', '出席済み＝「出席にする」を押した人数（下は対象の人数）', '未収＝出席済みで、まだ払っていない人数', '欠席・未回答・未定＝回答の内訳'], n: ['議決のある会議では「議決権」と定足数も出ます。遅れて来る人は、到着して出席にするまで数に入りません', '数字を押しても絞り込みにはなりません。絞り込みは下のボタンで'] },
     { id: 'prep', t: '持ち物・準備のチェック', k: '持ち物 準備 準備物 忘れ物 チェックリスト', fl: '#prep', s: ['上の「🧳 持ち物・準備」を開く', '用意できたものにチェックを付ける'], n: ['管理ページの会議カードのチェックと同じものです', '出ていないときは、この団体では使わない設定です'] },
-    { id: 'mksheet', t: '受付シートがまだない会議の受付を始める', k: '受付シート ない 作る 作成 会議が出ない 選べない 出てこない 準備 始める', fl: '#mkSheet', s: ['いちばん上の「＋ 受付シートを作る」（または「＋ ほかの会議の受付シートを作る」）を押す', '受付をする会議を押す（10秒ほどで、対象の人の一覧と会費が入った受付シートができる）', 'できたら、その会議の受付画面に切り替わる'], n: ['管理ページの「受付・集金」で「受付シートを作成」を押すのと同じです', '会議そのものが登録されていないときは、管理ページの「会議」で先に登録します', '作ったあとに回答が変わったときは、管理ページの「受付・集金」で「更新（チェック保持）」'] },
+    { id: 'mksheet', t: '受付シートがまだない会議の受付を始める', k: '受付シート ない 作る 作成 会議が出ない 選べない 出てこない 準備 始める', fl: '#mkSheet', s: ['いちばん上の右にある青い「＋ 受付シートを作る」を押す', '出てきた一覧から、受付をする会議を押す', '10秒ほどで受付シートができ、その会議の受付に切り替わる'], n: ['管理ページの「受付・集金」で「受付シートを作成」を押すのと同じです', '会議そのものが登録されていないときは、管理ページの「会議」で先に登録します', '作ったあとに回答が変わったときは、管理ページの「受付・集金」で「更新（チェック保持）」'] },
     { id: 'switch', t: '別の会議の受付に切り替える', k: '別の会議 切り替え 会議を選ぶ 違う会議 次の会議', fl: '#sheetSel', s: ['いちばん上の会議名の選択欄を押す', '受付したい会議を選ぶ'], n: ['受付シートを作ってある会議だけが出ます。出てこない会議は、上の「＋ ほかの会議の受付シートを作る」から作れます'] },
     { id: 'save', t: '保存されているか心配・動かない', k: '保存 消えた 反映 動かない 固まった 電波 エラー ログイン 押せない', s: ['ボタンを押すと、下に「保存中」と出て、消えたら保存できています', 'ずっと消えない・エラーが出るときは、電波を確かめてページを読み込み直す', 'ログイン画面が出たら、メールアドレスを入れて、届いた6桁のコードでログインし直す'], n: ['読み込み直しても、付けたチェックは残っています', '2人で同時に受付しても大丈夫です。相手の分は読み込み直すと出ます'] },
     { id: 'end', t: '受付が終わったら', k: '終わったら 終わった 終了 片付け 確定 締め 合わない 現金を数える', s: ['「未出席」「未収」「領収書未」を順に押して、漏れがないか見る', '漏れを直す（出席・集金・当日変更）', '管理ページの「受付・集金」で「確定」（管理者）→「出席状況」で「最新に更新」'], n: ['集めた現金は、上の「集金済み」の金額と合っているか数えます'] }
