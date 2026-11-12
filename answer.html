@@ -5,7 +5,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>会員研修委員会 出欠回答</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -40,8 +43,8 @@
   .step .h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
   .step .h .n{font-family:var(--display);font-size:22px;color:var(--blue)}
   .step .h .t{font-size:15px;font-weight:900}
-  .step .h .req{font-size:10px;font-weight:700;color:#fff;background:var(--absent);padding:1px 6px;border-radius:3px;margin-left:auto}
-  .step .h .opt{font-size:10px;font-weight:700;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:auto}
+  .step .h .req{font-size:11px;font-weight:700;color:#fff;background:var(--absent);padding:1px 6px;border-radius:3px;margin-left:auto}
+  .step .h .opt{font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:auto}
   .mlist{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
   .mlist .mrow{display:flex;width:100%;gap:12px;align-items:center;padding:11px 14px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;cursor:pointer}
   .mlist .mrow:last-child{border-bottom:0}
@@ -62,7 +65,7 @@
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .grid.two{grid-template-columns:repeat(2,1fr)}
   .opt-btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:14px 6px;font:inherit;font-size:15px;font-weight:900;color:var(--ink);cursor:pointer;text-align:center;line-height:1.2}
-  .opt-btn small{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-top:2px}
+  .opt-btn small{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-top:2px}
   .opt-btn.on{border-color:var(--blue);background:var(--blue);color:#fff}
   .opt-btn.on small{color:rgba(255,255,255,.8)}
   .opt-btn.absent.on{border-color:var(--absent);background:var(--absent)}
@@ -78,7 +81,7 @@
   @media(min-width:600px){.names{grid-template-columns:repeat(3,1fr)}}
   .names .g{grid-column:1/-1;font-size:11px;font-weight:900;color:var(--blue);letter-spacing:.1em;margin-top:6px}
   .nm{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:9px 8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left;line-height:1.25}
-  .nm small{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+  .nm small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
   .nm.on{border-color:var(--blue);background:var(--blue-soft)}
   .nm.done{border-left:4px solid var(--ok)}
   .current{margin-top:10px;font-size:12px;color:var(--muted)}
@@ -149,6 +152,11 @@ window.addEventListener('load', postH); window.addEventListener('resize', postH)
 setInterval(postH, 800);
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
+// 上の英字の見出しが画面からはみ出すときは、収まるまで文字を小さくする
+function fitEn(){ var e = document.querySelector('.hero .en'); if(!e) return; e.style.fontSize = ''; var fs = parseFloat(getComputedStyle(e).fontSize) || 44; var n = 0; while(e.scrollWidth > e.clientWidth + 1 && fs > 22 && n++ < 30){ fs -= 2; e.style.fontSize = fs + 'px'; } }
+try { if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ fitEn(); }); } catch(e){}
+window.addEventListener('resize', function(){ fitEn(); });
+
 function bootAnswer(d){
   D = d;
   if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
@@ -156,17 +164,43 @@ function bootAnswer(d){
   S.meetingId = d.meetings.some(function(m){ return m.id === INITIAL; }) ? INITIAL : d.meetings[0].id;
   // 前回の名前を覚えておく（同じ端末なら選び直し不要）。埋め込み時は閲覧ページから渡された名前を優先
   var me = ME; try { if(!me) me = localStorage.getItem('ans_me') || ''; } catch(e){}
-  if(me && d.people.some(function(p){ return p.name === me; })) S.name = me;
+  if(me && d.people.some(function(p){ return p.name === me; })){ S.name = me; prefill(); }
   render();
 }
-if(INIT && INIT.meetings) bootAnswer(INIT);
-else google.script.run.withSuccessHandler(bootAnswer).withFailureHandler(function(e){
-  document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '</div>';
+// 2回目からは、前に開いたときの会議・名簿をすぐ出して（待ち時間なし）、裏で最新を取りに行く
+var __AK = 'ans_cache:' + location.pathname, __aStart = false, __aTouched = false;
+window.addEventListener('pointerdown', function(){ __aTouched = true; }, true);
+window.addEventListener('keydown', function(){ __aTouched = true; }, true);
+try { var __ac = JSON.parse(localStorage.getItem(__AK) || 'null'); if(__ac && __ac.d && __ac.d.meetings && __ac.d.people && Date.now() - __ac.at < 7 * 864e5){ ORG = __ac.org || {}; __aStart = true; bootAnswer(JSON.parse(JSON.stringify(__ac.d))); } } catch(e){ __aStart = false; try { localStorage.removeItem(__AK); } catch(e2){} }
+google.script.run.withSuccessHandler(function(d){
+  try { localStorage.setItem(__AK, JSON.stringify({ at: Date.now(), org: ORG, d: d })); } catch(e){}
+  if(!__aStart){ bootAnswer(d); return; }
+  // 最新に入れ替える。選びかけの内容（名前・出欠）は消さない
+  if(PROJECT && d.meetings.some(function(m){ return String(m.project || '').trim() === PROJECT; })) d.meetings = d.meetings.filter(function(m){ return String(m.project || '').trim() === PROJECT || m.id === INITIAL; });
+  D = d;
+  if(!d.meetings.length){ document.getElementById('app').innerHTML = '<div class="msg">現在、回答を受け付けている会議はありません。</div>'; return; }
+  if(!d.meetings.some(function(m){ return m.id === S.meetingId; })){ S.meetingId = d.meetings[0].id; prefill(); render();   // 選んでいた会議がなくなった：選びかけの出欠を別の会議に持ち越さない
+    var nt = document.createElement('div'); nt.style.cssText = 'margin:10px 16px;padding:10px 14px;border-radius:10px;background:#fff4e5;border:1.5px solid #f5c98a;font-size:13.5px;line-height:1.6'; nt.textContent = '先ほどの会議は受付が終わったため、次の会議に切り替えました。会議名を確かめてから回答してください'; var ap = document.getElementById('app'); if(ap && ap.firstChild) ap.insertBefore(nt, ap.children[1] || null); return; }
+  if(S.name && !d.people.some(function(p){ return p.name === S.name; })){ S.name = ''; render(); return; }
+  if(!__aTouched){ if(S.name) prefill(); render(); }   // 触っている最中は画面を動かさない（次に押したときに最新の内容で描き直される）
+}).withFailureHandler(function(e){
+  if(__aStart) return;   // 前の内容で表示できている。送信はそのまま使える
+  document.getElementById('app').innerHTML = '<div class="msg">読み込めません：' + esc(e.message) + '<br><button type="button" onclick="location.reload()" style="margin-top:12px;padding:10px 18px;border-radius:8px;border:1.5px solid #0a5aa8;background:#fff;color:#0a5aa8;font:inherit;font-weight:900;cursor:pointer">もう一度読み込む</button></div>';
 }).answerData();
 
 function meeting(){ return D.meetings.filter(function(m){ return m.id === S.meetingId; })[0]; }
 function targets(){ var m = meeting(); return D.people.filter(function(p){ return m.targets.indexOf(p.name) >= 0; }); }
 function existing(){ return (D.answers[S.meetingId] || {})[S.name]; }
+
+// 名前を選んだとき・会議を切り替えたとき：前の回答があれば、その内容を入れておく（変えるところだけ直して送れる。備考やオブザーバーが消えない）
+function prefill(){
+  var ex = existing(); S.attend = ''; S.party = ''; S.note = ''; S.obs = 'なし'; S.obsNames = ''; S.obsParty = ''; S.proxyName = ''; S.proxyYaku = ''; S.mandate = ''; S._pre = false;
+  if(!ex || !S.name) return;
+  S.attend = ex.attend || ''; S.party = ex.party || ''; S.note = ex.note || '';
+  if(ex.obs === 'あり'){ S.obs = 'あり'; S.obsNames = ex.obsNames || ''; S.obsParty = ex.obsParty || ''; }
+  if(ex.attend === '代理出席'){ S.proxyName = ex.proxy || ''; S.mandate = ex.mandate || ''; }
+  S._pre = true;
+}
 
 function render(){
   var m = meeting(), hasParty = m.party === '有';
@@ -215,7 +249,7 @@ function render(){
   });
   h += '</div>';
   var ex = existing();
-  if(S.name) h += '<div class="current">' + (ex ? '現在の回答：<b>' + esc(ex.attend) + '</b>' + (hasParty && ex.party ? '　懇親会：<b>' + esc(ex.party) + '</b>' : '') + '（' + esc(ex.when) + '）　※送信すると上書きされます' : 'まだ回答がありません') + '</div>';
+  if(S.name) h += '<div class="current">' + (ex ? '現在の回答：<b>' + esc(ex.attend) + '</b>' + (hasParty && ex.party ? '　懇親会：<b>' + esc(ex.party) + '</b>' : '') + '（' + esc(ex.when) + '）<br>' + (S._pre ? '前回の内容を入れてあります。変えるところだけ直して送信してください' : '※送信すると上書きされます') : 'まだ回答がありません') + '</div>';
   h += '</div>';
 
   // 3 会議の出欠
@@ -251,10 +285,10 @@ function render(){
 
   h += '<div class="foot"><div class="err" id="err"></div><button class="send" id="send">回答を送信する</button></div>';
 
-  var el = document.getElementById('app'); el.innerHTML = h;
-  var mt = document.getElementById('mt'); if(mt) mt.onchange = function(){ S.meetingId = this.value; render(); };
-  Array.prototype.forEach.call(document.querySelectorAll('.mlist .mrow'), function(b){ b.onclick = function(){ if(b.dataset.m !== S.meetingId){ S.meetingId = b.dataset.m; S.attend = ''; S.party = ''; render(); window.scrollTo(0, 0); } }; });
-  Array.prototype.forEach.call(el.querySelectorAll('.nm'), function(b){ b.onclick = function(){ S.name = b.dataset.n; render(); }; });
+  var el = document.getElementById('app'); el.innerHTML = h; fitEn();
+  var mt = document.getElementById('mt'); if(mt) mt.onchange = function(){ S.meetingId = this.value; prefill(); render(); };
+  Array.prototype.forEach.call(document.querySelectorAll('.mlist .mrow'), function(b){ b.onclick = function(){ if(b.dataset.m !== S.meetingId){ S.meetingId = b.dataset.m; prefill(); render(); window.scrollTo(0, 0); } }; });
+  Array.prototype.forEach.call(el.querySelectorAll('.nm'), function(b){ b.onclick = function(){ S.name = b.dataset.n; prefill(); render(); }; });
   Array.prototype.forEach.call(el.querySelectorAll('.opt-btn'), function(b){
     b.onclick = function(){
       S[b.dataset.k] = b.dataset.v;
@@ -279,7 +313,7 @@ function submit(){
   if(!S.attend) problems.push('会議の出欠を選んでください');
   if(S.attend === '代理出席' && !S.proxyName) problems.push('代理者の氏名を入力してください');
   if(hasParty && !S.party) problems.push('懇親会の出欠を選んでください');
-  if(problems.length){ err.textContent = problems.join('　／　'); err.style.display = 'block'; window.scrollTo(0, 0); return; }
+  if(problems.length){ err.textContent = 'まだ入っていない所があります：' + problems.join('　／　'); err.style.display = 'block'; try { err.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){} return; }
   err.style.display = 'none';
   // 懇親会のキャンセル期限を過ぎてから「出席 → 欠席」に変えるとき：一度だけやわらかく確認する
   var ex = existing(), late = hasParty && m.cancel && m.cancel.passed && ex && ['出席','遅参','代理出席'].indexOf(ex.party) >= 0 && S.party === '欠席';
