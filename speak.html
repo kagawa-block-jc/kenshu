@@ -134,7 +134,7 @@ fetch(API_URL + '?api=org&t=' + Date.now(), { cache: 'no-store' }).then(function
 </script>
 <script>
 // ===== 発言記録ページ：押した瞬間にこの端末に記録し、裏でまとめて「議事録データ」に送る =====
-var PAGE_VERSION = '2026-11-20-3';   // 版の印（管理ページ「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-20-4';   // 版の印（管理ページ「更新の確認」で照らし合わせる）
 var IMG_BASE = 'https://kagawa-block-jc.github.io/answer/img/';
 function qp(k){ var m = new RegExp('[?&]' + k + '=([^&#]*)').exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -219,7 +219,7 @@ function noSheet(){
 function head(){
   var m = S.b ? S.b.meeting : {};
   return '<header><div class="hd"><div class="ttl"><div class="o">' + esc(ORG.short || ORG.name || '') + '　発言記録</div><b>' + esc(m.label || '') + '</b><div class="o" style="font-weight:500">' + esc(m.date || '') + (m.time ? '　' + esc(m.time) + '〜' : '') + '　<a href="#" id="chg" style="color:var(--blue)">会議を変える</a></div></div>' +
-    '<div class="clock' + (S.t0 ? '' : ' off') + '" id="clock">' + (S.t0 ? shown(nowSec()) : '--:--:--') + '<small>' + (S.t0 ? '録音からの時間' + (S.off ? '（ずらし ' + (S.off > 0 ? '+' : '') + S.off + '秒）' : '') : '録音はまだ') + '</small></div>' +
+    '<div class="clock' + (S.t0 ? '' : ' off') + '" id="clock">' + (S.t0 ? shown(nowSec()) : '--:--:--') + '<small>' + (S.t0 ? '計測からの時間' + (S.off ? '（ずらし ' + (S.off > 0 ? '+' : '') + S.off + '秒）' : '') : '計測はまだ') + '</small></div>' +
     '<span class="sync" id="sync">保存済み</span></div></header>';
 }
 function groupsHtml(){
@@ -250,7 +250,7 @@ function bindGrid(){
 function paintGrid(){ var g = document.getElementById('grid'); if(g){ g.innerHTML = groupsHtml(); bindGrid(); } }
 function logHtml(){
   var list = S.items.slice().reverse().slice(0, 40);
-  if(!list.length) return '<div class="empty">' + (S.t0 ? 'まだ記録はありません。話し始めた人の名前を押してください' : '「録音開始」を押すと記録できるようになります') + '</div>';
+  if(!list.length) return '<div class="empty">' + (S.t0 ? 'まだ記録はありません。話し始めた人の名前を押してください' : '「計測スタート」を押すと記録できるようになります') + '</div>';
   return '<ul class="log">' + list.map(function(x){
     if(x.t === 'a') return '<li class="ag"><span class="t">' + shown(x.sec) + '</span><span>▶ ' + esc(S.agenda[x.ai] || x.ag || ('議題' + (x.ai + 1))) + '</span></li>';
     return '<li><span class="t">' + shown(x.sec) + '</span><span>' + esc(x.name) + '<span class="a">' + esc(S.agenda[x.ai] || x.ag || '') + '</span></span></li>';
@@ -269,7 +269,7 @@ function render(){
       '<button type="button" class="btn" id="agEdit">議題の準備</button></div>' +
     '<div class="main"><div id="grid">' + groupsHtml() + '</div><div class="side"><h3>記録（新しい順）</h3><div id="log">' + logHtml() + '</div></div></div></div>' +
     '<div class="ctl"><div class="in">' +
-      (S.t0 ? '<button type="button" class="btn" id="offBtn">時刻の調整</button>' : '<button type="button" class="btn g" id="recBtn" style="min-width:150px">● 録音開始</button>') +
+      (S.t0 ? '<button type="button" class="btn" id="offBtn">時刻の調整</button>' : '<button type="button" class="btn g" id="recBtn" style="min-width:170px;line-height:1.2">計測スタート<small style="display:block;font-size:11px;font-weight:600;opacity:.9">録音機の録音と同時に押す</small></button>') +
       '<button type="button" class="btn d" id="undo"' + (S.items.some(function(x){ return x.t === 's'; }) ? '' : ' disabled') + '>1つ取り消す</button>' +
       '<span class="sp"></span><button type="button" class="btn p" id="memoBtn">発言メモを見る・コピー</button></div></div>';
   document.getElementById('app').innerHTML = h;
@@ -297,13 +297,13 @@ function startRec(){
   S.t0 = Date.now(); S.off = 0; S.recDirty = true;
   if(S.agenda.length) push({ uid: rid(), t: 'a', ai: S.ai, ag: S.agenda[S.ai] || '', sec: 0, at: Date.now() });   // 最初の議題の始まり
   saveLocal(); render(); sync();
-  toast(T('録音スタート！名前を押してな', '録音開始。話し始めた人の名前を押してください'));
+  toast(T('計測スタート！話した人の名前を押してな', '計測スタート。話し始めた人の名前を押してください'));
 }
 function push(o){ S.items.push(o); S.queue.push(o); }
 function speak(name, el){
   if(!S.t0){
     var r = document.getElementById('recBtn'); if(r){ r.classList.remove('nudge'); void r.offsetWidth; r.classList.add('nudge'); }
-    toast(T('先に「録音開始」を押してな（録音機と同時に）', '先に「録音開始」を押してください（録音機の録音と同時に）'));
+    toast(T('先に「計測スタート」を押してな（録音機と同時に）', '先に「計測スタート」を押してください（録音機の録音と同時に）'));
     return;
   }
   push({ uid: rid(), t: 's', ai: S.ai, ag: S.agenda[S.ai] || '', sec: nowSec(), name: name, at: Date.now() });
@@ -377,21 +377,21 @@ function agendaEditor(){
 function offsetEditor(){
   var paint = function(){ var b = document.getElementById('offV'); if(b) b.textContent = (S.off > 0 ? '+' : '') + S.off + '秒'; };
   modal('<div class="mh"><h2>時刻の調整</h2><button class="btn s" data-x>閉じる</button></div><div class="mb">' +
-    '<div class="hint">録音機の録音と「録音開始」を押すのがずれたときに、記録の時刻をまとめてずらします。録音のほうが早く始まっていたら「＋」、遅かったら「−」です。あとからでも直せます。</div>' +
+    '<div class="hint">録音機の録音と「計測スタート」を押すのがずれたときに、記録の時刻をまとめてずらします。録音のほうが早く始まっていたら「＋」、遅かったら「−」です。あとからでも直せます。</div>' +
     '<div class="offrow"><button class="btn" data-d="-10">−10秒</button><button class="btn" data-d="-1">−1秒</button><b id="offV"></b><button class="btn" data-d="1">＋1秒</button><button class="btn" data-d="10">＋10秒</button></div>' +
-    '<div class="hint" style="margin-top:14px">録音機を止めて録り直したときは、新しい録音と同時に「録音開始をやり直す」を押してください。それまでの記録は消えず、前の録音の時刻のまま残ります（前の録音ファイルと合わせて使ってください）。</div></div>' +
-    '<div class="mf"><button class="btn d" id="reRec">録音開始をやり直す</button><button class="btn p" data-x>できた</button></div>');
+    '<div class="hint" style="margin-top:14px">録音機を止めて録り直したときは、新しい録音と同時に「計測をやり直す」を押してください。それまでの記録は消えず、前の録音の時刻のまま残ります（前の録音ファイルと合わせて使ってください）。</div></div>' +
+    '<div class="mf"><button class="btn d" id="reRec">計測をやり直す</button><button class="btn p" data-x>できた</button></div>');
   paint();
-  Array.prototype.forEach.call(document.querySelectorAll('#modal [data-d]'), function(b){ b.onclick = function(){ S.off = Math.max(-3600, Math.min(3600, S.off + Number(b.dataset.d))); S.recDirty = true; saveLocal(); paint(); var c = document.getElementById('clock'); if(c) c.innerHTML = shown(nowSec()) + '<small>録音からの時間' + (S.off ? '（ずらし ' + (S.off > 0 ? '+' : '') + S.off + '秒）' : '') + '</small>'; refresh(); scheduleSync(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('#modal [data-d]'), function(b){ b.onclick = function(){ S.off = Math.max(-3600, Math.min(3600, S.off + Number(b.dataset.d))); S.recDirty = true; saveLocal(); paint(); var c = document.getElementById('clock'); if(c) c.innerHTML = shown(nowSec()) + '<small>計測からの時間' + (S.off ? '（ずらし ' + (S.off > 0 ? '+' : '') + S.off + '秒）' : '') + '</small>'; refresh(); scheduleSync(); }; });
   document.getElementById('reRec').onclick = function(){
     if(this.dataset.ok !== '1'){ this.dataset.ok = '1'; this.textContent = 'もう一度押すとやり直します'; return; }
     // それまでの記録は前の録音の時刻のまま残す（消さない）。ここからの記録は新しい録音の0秒から数える
-    S.t0 = Date.now(); S.off = 0; S.recDirty = true; saveLocal(); closeModal(); render(); sync(); toast('録音開始をやり直しました');
+    S.t0 = Date.now(); S.off = 0; S.recDirty = true; saveLocal(); closeModal(); render(); sync(); toast('計測をやり直しました');
   };
 }
 function memoText(){
   var m = S.b.meeting, lines = ['【発言記録】' + m.label + '　' + m.date];
-  if(S.t0){ var d = new Date(S.t0); lines.push('録音開始 ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2) + (S.off ? '（時刻を ' + (S.off > 0 ? '+' : '') + S.off + '秒 ずらし済み）' : '')); }
+  if(S.t0){ var d = new Date(S.t0); lines.push('計測スタート ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2) + (S.off ? '（時刻を ' + (S.off > 0 ? '+' : '') + S.off + '秒 ずらし済み）' : '')); }
   lines.push('（時刻は録音の頭からの経過時間。名前は押した順）');
   var by = {}, keys = {};
   S.items.forEach(function(x){ var k = x.ai; keys[k] = 1; by[k] = by[k] || { start: null, s: [] }; if(x.t === 'a'){ if(by[k].start === null || x.sec < by[k].start) by[k].start = x.sec; } else by[k].s.push(x); });

@@ -315,7 +315,7 @@ document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagN
 function __preImg(o){ try { Object.keys(o || {}).forEach(function(k){ var u = o[k]; if(typeof u === 'string' && u.indexOf('http') === 0){ var i = new Image(); i.src = u; } }); } catch(e){} }   // ポーズを切り替えたとき待たずに出るよう、先に読んでおく
 </script>
 <script>
-var PAGE_VERSION = '2026-11-20-3';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-20-4';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 // 団体名（見出し用）：前に開いたときのものをすぐ使い、裏で最新を取る
 var ORG = {}; try { ORG = JSON.parse(localStorage.getItem('rec_org:' + location.pathname.replace(/[^\/]*$/, '')) || '{}') || {}; } catch(e){ ORG = {}; }
 var INIT = null;
