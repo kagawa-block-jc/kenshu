@@ -310,12 +310,12 @@ window.google = { script: { run: (function(){
 })() } };
 </script>
 <script>
-// 案内役の絵（GitHub の answer/img/ から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
-document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/img/') === 0) t.style.visibility = 'hidden'; }, true);
+// 案内役の絵（GitHub の answer/ の一番上 から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
+document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/') === 0) t.style.visibility = 'hidden'; }, true);
 function __preImg(o){ try { Object.keys(o || {}).forEach(function(k){ var u = o[k]; if(typeof u === 'string' && u.indexOf('http') === 0){ var i = new Image(); i.src = u; } }); } catch(e){} }   // ポーズを切り替えたとき待たずに出るよう、先に読んでおく
 </script>
 <script>
-var PAGE_VERSION = '2026-11-20-4';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-20-5';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 // 団体名（見出し用）：前に開いたときのものをすぐ使い、裏で最新を取る
 var ORG = {}; try { ORG = JSON.parse(localStorage.getItem('rec_org:' + location.pathname.replace(/[^\/]*$/, '')) || '{}') || {}; } catch(e){ ORG = {}; }
 var INIT = null;
@@ -722,9 +722,9 @@ function toggle(p, field){
 (function(){
   if(document.getElementById('owlBtn')) return;
   // 案内役の絵：owl＝ふくろう／glass＝虫めがね／chara＝キャラクター（設定「案内役のキャラクター」）
-  var SETS = { owl: { hi: 'https://kagawa-block-jc.github.io/answer/img/owl_hi.webp', smile: 'https://kagawa-block-jc.github.io/answer/img/owl_smile.webp' },
+  var SETS = { owl: { hi: 'https://kagawa-block-jc.github.io/answer/owl_hi.webp', smile: 'https://kagawa-block-jc.github.io/answer/owl_smile.webp' },
     glass: {"hi": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTMyIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0MiA4NiA5MikiPjxyZWN0IHg9Ijc4IiB5PSI4NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjQ2IiByeD0iOCIgZmlsbD0iIzE0MzY1ZiIvPjxyZWN0IHg9Ijc4IiB5PSI5MiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjciIGZpbGw9IiNlODU5MGMiLz48L2c+PGNpcmNsZSBjeD0iNTIiIGN5PSI1MiIgcj0iNDEiIGZpbGw9IiNlZWY0ZmUiIHN0cm9rZT0iIzFmNWZiZiIgc3Ryb2tlLXdpZHRoPSI5Ii8+PHBhdGggZD0iTTI2IDQ0YTI4IDI4IDAgMCAxIDIwLTE5IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM5IDQyYzAtOSA2LTE0IDE0LTE0czE0IDUgMTQgMTNjMCA2LTMgOS03IDEyLTMgMi00IDQtNCA4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxNDM2NWYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSI3NCIgcj0iNSIgZmlsbD0iIzE0MzY1ZiIvPjwvc3ZnPg==", "smile": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTMyIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0MiA4NiA5MikiPjxyZWN0IHg9Ijc4IiB5PSI4NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjQ2IiByeD0iOCIgZmlsbD0iIzE0MzY1ZiIvPjxyZWN0IHg9Ijc4IiB5PSI5MiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjciIGZpbGw9IiNlODU5MGMiLz48L2c+PGNpcmNsZSBjeD0iNTIiIGN5PSI1MiIgcj0iNDEiIGZpbGw9IiNlZWY0ZmUiIHN0cm9rZT0iIzFmNWZiZiIgc3Ryb2tlLXdpZHRoPSI5Ii8+PHBhdGggZD0iTTI2IDQ0YTI4IDI4IDAgMCAxIDIwLTE5IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM0IDU0bDEzIDEzIDI0LTI3IiBmaWxsPSJub25lIiBzdHJva2U9IiMxODgwMzgiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+"},
-    chara: {"hi": "https://kagawa-block-jc.github.io/answer/img/chara_hi.webp", "think": "https://kagawa-block-jc.github.io/answer/img/chara_think.webp", "smile": "https://kagawa-block-jc.github.io/answer/img/chara_point.webp", "point": "https://kagawa-block-jc.github.io/answer/img/chara_point.webp", "good": "https://kagawa-block-jc.github.io/answer/img/chara_good.webp", "guts": "https://kagawa-block-jc.github.io/answer/img/chara_guts.webp"} };
+    chara: {"hi": "https://kagawa-block-jc.github.io/answer/chara_hi.webp", "think": "https://kagawa-block-jc.github.io/answer/chara_think.webp", "smile": "https://kagawa-block-jc.github.io/answer/chara_point.webp", "point": "https://kagawa-block-jc.github.io/answer/chara_point.webp", "good": "https://kagawa-block-jc.github.io/answer/chara_good.webp", "guts": "https://kagawa-block-jc.github.io/answer/chara_guts.webp"} };
   if(ORG.guide === 'none'){ window.owlSetKind = function(){}; return; }   // 設定「案内役のキャラクター」＝なし
   var KIND = SETS[ORG.guide] ? ORG.guide : 'owl', IMG = SETS[KIND];
   if(KIND === 'chara') __preImg(IMG);   // キャラクターのポーズを先に読んでおく

@@ -389,8 +389,8 @@
 <select id="sel" hidden></select>
 
 <script>
-// 案内役の絵（GitHub の answer/img/ から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
-document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/img/') === 0) t.style.visibility = 'hidden'; }, true);
+// 案内役の絵（GitHub の answer/ の一番上 から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
+document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/') === 0) t.style.visibility = 'hidden'; }, true);
 function __preImg(o){ try { Object.keys(o || {}).forEach(function(k){ var u = o[k]; if(typeof u === 'string' && u.indexOf('http') === 0){ var i = new Image(); i.src = u; } }); } catch(e){} }   // ポーズを切り替えたとき待たずに出るよう、先に読んでおく
 </script>
 <script>
@@ -423,7 +423,7 @@ window.google = { script: { run: (function(){
 function fitEn(){ var e = document.querySelector('.hero .en'); if(!e) return; e.style.fontSize = ''; var fs = parseFloat(getComputedStyle(e).fontSize) || 44; var n = 0; while(e.scrollWidth > e.clientWidth + 1 && fs > 22 && n++ < 30){ fs -= 2; e.style.fontSize = fs + 'px'; } }
 try { if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ fitEn(); }); } catch(e){}
 window.addEventListener('resize', function(){ fitEn(); });
-var PAGE_VERSION = '2026-11-20-4';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-20-5';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var ORG = {}, INIT = null;
 // 最初の表示に必要なものを1回で取ってから、ページ本体を動かす。
 // 2回目からは、前に開いたときの内容をすぐ出して（待ち時間なし）、裏で最新を取りに行く。変わっていたら入れ替える
@@ -497,11 +497,11 @@ function backToAnswer(show){
 (function(){
   if(document.getElementById('owlBtn')) return;
   // 案内役の絵：owl＝ふくろう／glass＝虫めがね／chara＝キャラクター（設定「案内役のキャラクター」）
-  var IMGS = { owl: 'https://kagawa-block-jc.github.io/answer/img/owl_hi.webp', glass: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTMyIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0MiA4NiA5MikiPjxyZWN0IHg9Ijc4IiB5PSI4NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjQ2IiByeD0iOCIgZmlsbD0iIzE0MzY1ZiIvPjxyZWN0IHg9Ijc4IiB5PSI5MiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjciIGZpbGw9IiNlODU5MGMiLz48L2c+PGNpcmNsZSBjeD0iNTIiIGN5PSI1MiIgcj0iNDEiIGZpbGw9IiNlZWY0ZmUiIHN0cm9rZT0iIzFmNWZiZiIgc3Ryb2tlLXdpZHRoPSI5Ii8+PHBhdGggZD0iTTI2IDQ0YTI4IDI4IDAgMCAxIDIwLTE5IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM5IDQyYzAtOSA2LTE0IDE0LTE0czE0IDUgMTQgMTNjMCA2LTMgOS03IDEyLTMgMi00IDQtNCA4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxNDM2NWYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSI3NCIgcj0iNSIgZmlsbD0iIzE0MzY1ZiIvPjwvc3ZnPg==", chara: "https://kagawa-block-jc.github.io/answer/img/chara_hi.webp" };
+  var IMGS = { owl: 'https://kagawa-block-jc.github.io/answer/owl_hi.webp', glass: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTMyIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0MiA4NiA5MikiPjxyZWN0IHg9Ijc4IiB5PSI4NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjQ2IiByeD0iOCIgZmlsbD0iIzE0MzY1ZiIvPjxyZWN0IHg9Ijc4IiB5PSI5MiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjciIGZpbGw9IiNlODU5MGMiLz48L2c+PGNpcmNsZSBjeD0iNTIiIGN5PSI1MiIgcj0iNDEiIGZpbGw9IiNlZWY0ZmUiIHN0cm9rZT0iIzFmNWZiZiIgc3Ryb2tlLXdpZHRoPSI5Ii8+PHBhdGggZD0iTTI2IDQ0YTI4IDI4IDAgMCAxIDIwLTE5IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM5IDQyYzAtOSA2LTE0IDE0LTE0czE0IDUgMTQgMTNjMCA2LTMgOS03IDEyLTMgMi00IDQtNCA4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxNDM2NWYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSI3NCIgcj0iNSIgZmlsbD0iIzE0MzY1ZiIvPjwvc3ZnPg==", chara: "https://kagawa-block-jc.github.io/answer/chara_hi.webp" };
   if(ORG.guide === 'none') return;   // 設定「案内役のキャラクター」＝なし
   var KIND = IMGS[ORG.guide] ? ORG.guide : 'owl', IMG = IMGS[KIND];
   // キャラクターのポーズ（キャラクターのときだけ）：ふだん／指さし（こっちやで）／喜ぶ／しょんぼり／考え中
-  var POSES = {"hi": "https://kagawa-block-jc.github.io/answer/img/chara_hi.webp", "point": "https://kagawa-block-jc.github.io/answer/img/chara_point_l.webp", "joy": "https://kagawa-block-jc.github.io/answer/img/chara_joy.webp", "sad": "https://kagawa-block-jc.github.io/answer/img/chara_sad.webp", "think": "https://kagawa-block-jc.github.io/answer/img/chara_think.webp"};
+  var POSES = {"hi": "https://kagawa-block-jc.github.io/answer/chara_hi.webp", "point": "https://kagawa-block-jc.github.io/answer/chara_point_l.webp", "joy": "https://kagawa-block-jc.github.io/answer/chara_joy.webp", "sad": "https://kagawa-block-jc.github.io/answer/chara_sad.webp", "think": "https://kagawa-block-jc.github.io/answer/chara_think.webp"};
   if(KIND === 'chara'){ IMG = POSES.hi; __preImg(POSES); }   // キャラクターのポーズを先に読んでおく
   var st = document.createElement('style');
   st.textContent = '#owlBtn{position:fixed;left:6px;bottom:64px;z-index:38;width:76px;height:92px;border:0;background:none;padding:0;cursor:pointer;perspective:300px;-webkit-tap-highlight-color:transparent;transition:transform .35s ease,opacity .35s ease;transform-origin:50% 100%}' +

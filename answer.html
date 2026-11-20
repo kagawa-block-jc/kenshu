@@ -140,8 +140,8 @@
 <div id="app"><div class="msg load">回答フォームを読み込んでいます…<small>Googleのサーバーが起動するまで数秒かかることがあります</small></div></div>
 
 <script>
-// 案内役の絵（GitHub の answer/img/ から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
-document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/img/') === 0) t.style.visibility = 'hidden'; }, true);
+// 案内役の絵（GitHub の answer/ の一番上 から読む）が読めなかったときは、壊れた絵の印を出さずに隠す
+document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagName === 'IMG' && String(t.src).indexOf('https://kagawa-block-jc.github.io/answer/') === 0) t.style.visibility = 'hidden'; }, true);
 function __preImg(o){ try { Object.keys(o || {}).forEach(function(k){ var u = o[k]; if(typeof u === 'string' && u.indexOf('http') === 0){ var i = new Image(); i.src = u; } }); } catch(e){} }   // ポーズを切り替えたとき待たずに出るよう、先に読んでおく
 </script>
 <script>
@@ -173,7 +173,7 @@ window.google = { script: { run: (function(){
   }
   return { withSuccessHandler: function(f){ return mk().withSuccessHandler(f); }, withFailureHandler: function(f){ return mk().withFailureHandler(f); } };
 })() } };
-var PAGE_VERSION = '2026-11-20-4';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-20-5';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var ORG = {};
 var INIT = null;
 function groupOf(p){ if(ORG.kind === 'ブロック') return p.kubun === 'ブロック役員' ? 'ブロック役員' : '各LOM 理事長・専務'; return String(p.kubun || '').trim() || '委員'; }
@@ -262,7 +262,7 @@ function myEvents(){ var m = meeting(); return ((m && m.events) || []).map(funct
 
 
 // ===== 案内役がキャラクター（委員長）のとき：回答ページにも顔を出して、ひとこと声をかける =====
-var CHARA_IMG = {"please": "https://kagawa-block-jc.github.io/answer/img/chara_please.webp", "joy": "https://kagawa-block-jc.github.io/answer/img/chara_joy.webp", "sad": "https://kagawa-block-jc.github.io/answer/img/chara_sad.webp", "think": "https://kagawa-block-jc.github.io/answer/img/chara_think.webp"};   // お願い／喜ぶ／しょんぼり／考え中
+var CHARA_IMG = {"please": "https://kagawa-block-jc.github.io/answer/chara_please.webp", "joy": "https://kagawa-block-jc.github.io/answer/chara_joy.webp", "sad": "https://kagawa-block-jc.github.io/answer/chara_sad.webp", "think": "https://kagawa-block-jc.github.io/answer/chara_think.webp"};   // お願い／喜ぶ／しょんぼり／考え中
 function charaOn(){ return ORG && ORG.guide === 'chara'; }
 function charaSay(t, mv, pose){
   if(!charaOn()) return '';
