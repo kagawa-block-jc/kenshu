@@ -271,6 +271,7 @@
   details.pghelp > summary::-webkit-details-marker{display:none}
   details.pghelp > summary:before{content:"▸";margin-right:5px} details.pghelp[open] > summary:before{content:"▾"}
   details.pghelp p{margin:2px 0 0}
+  .sentnote{background:#eef6ff;border:1px solid #cfe2fb;border-radius:8px;padding:8px 12px;margin:0 0 12px;font-size:13px;line-height:1.6}.sentnote a{margin-left:8px;color:var(--sub);font-size:12px}
   .helpq{margin-left:8px;width:24px;height:24px;border:1.5px solid var(--blue);border-radius:50%;background:#fff;color:var(--blue);font:inherit;font-size:13px;font-weight:900;cursor:pointer;vertical-align:middle;line-height:1}
   .paybtn{min-height:30px}
   /* 指で押す画面（スマホ・タブレット）では、小さいボタンを押しやすい大きさにする */
@@ -353,7 +354,7 @@ document.addEventListener('error', function(e){ var t = e.target; if(t && t.tagN
 function __preImg(o){ try { Object.keys(o || {}).forEach(function(k){ var u = o[k]; if(typeof u === 'string' && u.indexOf('http') === 0){ var i = new Image(); i.src = u; } }); } catch(e){} }   // ポーズを切り替えたとき待たずに出るよう、先に読んでおく
 </script>
 <script>
-var PAGE_VERSION = '2026-11-20-5';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-24-3';   // 版の印（管理ページ「ページURL」の「更新の確認」で照らし合わせる）
 var D = null, TAB = 'meetings';
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){t.classList.remove('on')},1800); }
@@ -1161,7 +1162,7 @@ function viewLinks(){
   var vq = function(q){ return vb + (vb.indexOf('?') >= 0 ? '&' : '?') + q; };
   var row = function(name, url, ok, who){ return '<tr><td class="name">' + name + ' ' + (ok ? '<span class="tag g">全体に配ってOK</span>' : '<span class="tag r">事務局・スタッフのみ</span>') + '<div class="muted" style="font-size:12px;font-weight:400;white-space:normal">' + who + '</div></td><td><input readonly value="' + esc(url) + '" style="width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:monospace" onclick="this.select()"></td><td><button class="btn s" data-copy="' + esc(url) + '">コピー</button></td></tr>'; };
   var h = '<div class="bar"><h2>ページURL</h2></div><div class="card tbl"><table><tbody>' +
-    row('出欠状況（閲覧＋回答）ページ', String((D.settings||{})['出欠状況ページURL（外部）'] || '').trim() || (u + '?view=1'), true, '2〜3日前の「出欠状況の共有文」で案内する。最初の案内文には下の回答ページを載せる。会議情報・出欠一覧・回答パネル・今後の予定・日程調整。金額は出ない。特定の会議は末尾に &id=会議ID') +
+    row('出欠状況（閲覧＋回答）ページ', String((D.settings||{})['出欠状況ページURL（外部）'] || '').trim() || (u + '?view=1'), true, '会議前の「会議前のお知らせ文」で案内する。最初の案内文には下の回答ページを載せる。会議情報・出欠一覧・回答パネル・今後の予定・日程調整。金額は出ない。特定の会議は末尾に &id=会議ID') +
     row('出欠回答ページ（直リンク）', String((D.settings||{})['回答ページURL（外部）'] || '').trim() || (u + '?answer=1'), true, '最初の案内文・催促に載せるのはこれ（案内の段階で全員の出欠まで見せない）' + (String((D.settings||{})['回答ページURL（外部）'] || '').trim() ? '。Googleの外に置いた回答ページ（複数アカウントの人も開ける）' : '')) +
     (D.pollTab ? row('日程調整（直リンク）', vq('poll=調整ID'), true, '「日程調整」タブの各行の「URLをコピー」で調整IDが入った形になる') : '') +
     (D.projectTab ? (D.projects || []) : []).filter(function(p){ return p.state !== '終了'; }).map(function(p){ var pu = vq('project=' + encodeURIComponent(p.name)); return '<tr><td class="name">📁 ' + esc(p.name) + ' <span class="tag g">全体に配ってOK</span><div class="muted" style="font-size:12px;font-weight:400;white-space:normal">この小委員会・事業の専用ページ。いつもの出欠ページが、この予定を上にして開きます' + (p.leader ? '（リーダー：' + esc(p.leader) + '）' : '') + '</div></td><td><input readonly value="' + esc(pu) + '" style="width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:monospace" onclick="this.select()"></td><td style="white-space:nowrap"><a class="btn s" href="' + esc(pu) + '" target="_blank" rel="noopener">開く ↗</a> <button class="btn s" data-copy="' + esc(pu) + '">コピー</button></td></tr>'; }).join('');
@@ -1257,18 +1258,32 @@ function meetingSelect(id, sel){ var ms = D.meetings.slice().sort(function(a,b){
 function viewNotice(){
   var up = upcoming(); if(!NOTICE_ID) NOTICE_ID = up.length ? up[0]['会議ID'] : (D.meetings[0] ? D.meetings[0]['会議ID'] : '');
   var h = '<div class="bar"><h2>案内・メール</h2>' + meetingSelect('nSel', NOTICE_ID) + '</div>';
+  var nm = D.meetings.filter(function(x){ return x['会議ID'] === NOTICE_ID; })[0] || {};
+  var sent = String(nm['LINE案内日'] || nm['案内送信日'] || '').trim();
+  var HR = '<hr style="border:0;border-top:1px dashed var(--line);margin:16px 0 12px">';
+  var A = '<h3 style="margin:0 0 8px">案内文（LINE用）</h3><p class="muted" style="margin:0 0 8px;font-size:13px">コピーして LINE に貼る。日時・場所・締切・回答ページ・カレンダーだけの短い文</p><div class="chk" style="margin-bottom:10px"><label title="回答ページに、この会議だけを出す（ほかの会議は並べない）。対象の人がちがう会議を、別々に案内するときに"><input type="checkbox" id="nOptOnly"> この会議だけの回答ページ</label><label><input type="checkbox" id="nOptCal" checked> カレンダー登録リンク</label></div><button class="btn p" id="nGen">案内文をつくる</button><textarea id="nText" style="width:100%;min-height:260px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6" placeholder="ここに表示されます"></textarea><div style="margin-top:8px;text-align:right"><button class="btn" id="nCopy">コピー</button></div>';
+  var B = '<h3 style="margin:0 0 6px">会議前のお知らせ文（短い版）</h3><p class="muted" style="margin:0 0 8px;font-size:13px">日時・場所・出席人数・懇親会・アジェンダとオンラインのURL、出欠状況ページが入る。コピーして LINE に貼る</p><button class="btn" id="nShare">会議前のお知らせ文をつくる</button><textarea id="nShareText" style="width:100%;min-height:200px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6;display:none"></textarea><div style="margin-top:8px;text-align:right"><button class="btn" id="nShareCopy" style="display:none">コピー</button></div>';
+  // 案内を出したあと（案内文をコピーした会議）は、お知らせ文を上に出し、案内文は畳んでおく
+  var top = sent
+    ? '<div class="sentnote">この会議の案内は ' + esc(fmtD(sent)) + ' に送っています。次は「会議前のお知らせ文」です。<a href="#" id="nUnsent">まだ送っていない</a></div>' + B + HR + '<details id="nAgain"><summary style="cursor:pointer;font-weight:700">案内文をもう一度つくる</summary><div style="margin-top:10px">' + A + '</div></details>'
+    : A + HR + B;
   h += '<div class="cols">' +
-    '<div class="card" style="padding:16px 18px"><h3 style="margin:0 0 8px">案内文（LINE用）</h3><p class="muted" style="margin:0 0 8px;font-size:13px">コピーして LINE に貼る。回答ページのURL入り</p><div class="chk" style="margin-bottom:10px"><label><input type="checkbox" id="nOptAgenda" checked> アジェンダURL</label><label title="回答ページに、この会議だけを出す（ほかの会議は並べない）。対象の人がちがう会議を、別々に案内するときに"><input type="checkbox" id="nOptOnly"> この会議だけの回答ページ</label><label><input type="checkbox" id="nOptOnline" checked> オンライン参加URL</label><label><input type="checkbox" id="nOptCal" checked> カレンダー登録リンク</label></div><button class="btn p" id="nGen">案内文をつくる</button><textarea id="nText" style="width:100%;min-height:260px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6" placeholder="ここに表示されます"></textarea><div style="margin-top:8px;text-align:right"><button class="btn" id="nCopy">コピー</button></div>' +
-    '<hr style="border:0;border-top:1px dashed var(--line);margin:16px 0 12px"><h3 style="margin:0 0 6px">出欠状況の共有文（会議の2〜3日前に）</h3><p class="muted" style="margin:0 0 8px;font-size:13px">出席・欠席・未回答の人数と未回答の人、懇親会の人数連絡の期限が入る。コピーして LINE に貼る</p><button class="btn" id="nShare">出欠状況の共有文をつくる</button><textarea id="nShareText" style="width:100%;min-height:200px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6;display:none"></textarea><div style="margin-top:8px;text-align:right"><button class="btn" id="nShareCopy" style="display:none">コピー</button></div></div>' +
+    '<div class="card" style="padding:16px 18px">' + top + '</div>' +
     '<div class="card" style="padding:16px 18px"><h3 style="margin:0 0 8px">メールで送る</h3><p class="muted" style="margin:0 0 10px;font-size:13px">宛先を選び、件名・本文を直してから送信。差出人は団体のGmail。送信履歴が残る</p><button class="btn p" id="nMail">メール送信画面を開く</button><div id="nMailBox" style="margin-top:12px"></div></div>' +
     '</div>';
   return h;
 }
 function bindNotice(){
-  var sel = document.getElementById('nSel'); if(sel) sel.onchange = function(){ NOTICE_ID = sel.value; document.getElementById('nText').value=''; document.getElementById('nMailBox').innerHTML=''; var st = document.getElementById('nShareText'); if(st){ st.value=''; st.style.display='none'; document.getElementById('nShareCopy').style.display='none'; } };
-  var g = document.getElementById('nGen'); if(g) g.onclick = function(){ g.disabled=true; api().withSuccessHandler(function(r){ g.disabled=false; document.getElementById('nText').value = r.text; }).withFailureHandler(function(e){ g.disabled=false; toast('エラー：'+e.message); }).adminNotice(TOKEN, NOTICE_ID, { agenda: document.getElementById('nOptAgenda').checked, online: document.getElementById('nOptOnline').checked, calendar: document.getElementById('nOptCal').checked, only: !!(document.getElementById('nOptOnly') || {}).checked }); };
-  var c = document.getElementById('nCopy'); if(c) c.onclick = function(){ var t = document.getElementById('nText'); t.select(); if(navigator.clipboard) navigator.clipboard.writeText(t.value).then(function(){ toast('コピーしました'); }); };
+  var sel = document.getElementById('nSel'); if(sel) sel.onchange = function(){ NOTICE_ID = sel.value; rerender('notice', viewNotice); };   // 会議ごとに、案内を出したかで並びが変わる
+  var g = document.getElementById('nGen'); if(g) g.onclick = function(){ g.disabled=true; api().withSuccessHandler(function(r){ g.disabled=false; document.getElementById('nText').value = r.text; }).withFailureHandler(function(e){ g.disabled=false; toast('エラー：'+e.message); }).adminNotice(TOKEN, NOTICE_ID, { calendar: document.getElementById('nOptCal').checked, only: !!(document.getElementById('nOptOnly') || {}).checked }); };
+  var nmRow = D.meetings.filter(function(x){ return x['会議ID'] === NOTICE_ID; })[0] || {};
+  var c = document.getElementById('nCopy'); if(c) c.onclick = function(){ var t = document.getElementById('nText'); if(!t.value.trim()){ toast('先に「案内文をつくる」を押してください'); return; } t.select(); try { document.execCommand('copy'); } catch(x){} if(navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function(){});
+    if(nmRow['LINE案内日'] || nmRow['案内送信日']){ toast('コピーしました'); return; }
+    // 初めてコピーした＝案内を出した、として残す（次からこの会議は「会議前のお知らせ文」が上に出る）
+    api().withSuccessHandler(function(r){ nmRow['LINE案内日'] = r.date; toast('コピーしました。この会議は「案内済み」にしました（次からはお知らせ文が上に出ます）'); }).withFailureHandler(function(){ toast('コピーしました'); }).adminNoticeMark(TOKEN, NOTICE_ID, true); };
+  var un = document.getElementById('nUnsent'); if(un) un.onclick = function(e){ e.preventDefault(); api().withSuccessHandler(function(){ nmRow['LINE案内日'] = ''; if(nmRow['案内送信日']) toast('メールで案内を送った記録があるため、並びは変わりません'); rerender('notice', viewNotice); }).withFailureHandler(function(er){ toast('エラー：' + er.message); }).adminNoticeMark(TOKEN, NOTICE_ID, false); };
   var sg = document.getElementById('nShare'); if(sg) sg.onclick = function(){ sg.disabled=true; api().withSuccessHandler(function(r){ sg.disabled=false; var t = document.getElementById('nShareText'); t.style.display=''; t.value = r.text; document.getElementById('nShareCopy').style.display=''; }).withFailureHandler(function(e){ sg.disabled=false; toast('エラー：'+e.message); }).adminShareText(TOKEN, NOTICE_ID); };
+  if(document.getElementById('nUnsent') && sg) sg.click();   // 案内済みの会議は、開いたらすぐお知らせ文を作っておく（押す手間を1つ減らす）
   var sc = document.getElementById('nShareCopy'); if(sc) sc.onclick = function(){ var t = document.getElementById('nShareText'); t.select(); if(navigator.clipboard) navigator.clipboard.writeText(t.value).then(function(){ toast('コピーしました'); }); };
   var m = document.getElementById('nMail'); if(m) m.onclick = function(){ m.disabled=true; api().withSuccessHandler(function(d){ m.disabled=false; mailBox(d); }).withFailureHandler(function(e){ m.disabled=false; toast('エラー：'+e.message); }).adminMailData(TOKEN, NOTICE_ID); };
 }
