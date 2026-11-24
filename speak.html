@@ -134,7 +134,7 @@ fetch(API_URL + '?api=org&t=' + Date.now(), { cache: 'no-store' }).then(function
 </script>
 <script>
 // ===== 発言記録ページ：押した瞬間にこの端末に記録し、裏でまとめて「議事録データ」に送る =====
-var PAGE_VERSION = '2026-11-24-3';   // 版の印（管理ページ「更新の確認」で照らし合わせる）
+var PAGE_VERSION = '2026-11-24-5';   // 版の印（管理ページ「更新の確認」で照らし合わせる）
 var IMG_BASE = 'https://kagawa-block-jc.github.io/answer/';
 function qp(k){ var m = new RegExp('[?&]' + k + '=([^&#]*)').exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
